@@ -34,7 +34,19 @@ class EventsBloc extends Bloc<EventsEvent, EventsState> {
     FetchAllEvents event,
     Emitter<EventsState> emit,
   ) async {
-    emit(state.copyWith(status: EventsStatus.loading));
+    // Emit loading state with initial source statuses so Settings
+    // shows "Loading..." for each API immediately
+    final initialResults = <EventSource, SourceResult>{};
+    for (final source in state.enabledSources) {
+      initialResults[source] = SourceResult(
+        source: source,
+        status: SourceStatus.loading,
+      );
+    }
+    emit(state.copyWith(
+      status: EventsStatus.loading,
+      sourceResults: initialResults,
+    ));
 
     try {
       final results = await _repository.fetchAllEvents(

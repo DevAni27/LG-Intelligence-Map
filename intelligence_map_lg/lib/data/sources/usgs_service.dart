@@ -11,7 +11,12 @@ import '../../core/constants/app_constants.dart';
 class USGSService {
   final Dio _dio;
 
-  USGSService({Dio? dio}) : _dio = dio ?? Dio();
+  USGSService({Dio? dio})
+      : _dio = dio ??
+            Dio(BaseOptions(
+              connectTimeout: const Duration(seconds: 15),
+              receiveTimeout: const Duration(seconds: 15),
+            ));
 
   /// Fetches all earthquakes from the last 24 hours.
   Future<List<GlobalEvent>> fetchDailyEarthquakes() async {

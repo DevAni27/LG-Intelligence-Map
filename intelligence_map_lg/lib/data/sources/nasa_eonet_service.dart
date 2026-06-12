@@ -1,118 +1,137 @@
 import 'package:dio/dio.dart';
 import '../models/global_event.dart';
-import '../../core/constants/app_constants.dart';
+import 'dart:convert';
 
 /// Fetches natural disaster data from NASA's Earth Observatory
-/// Natural Event Tracker (EONET) API v3.
+/// Natural Event Tracker (EONET) API v3 — GeoJSON endpoint.
 ///
-/// EONET docs: https://eonet.gsfc.nasa.gov/docs/v3
-/// Returns active events including wildfires, severe storms,
-/// volcanoes, floods, and sea ice. No auth required.
+/// Using the GeoJSON endpoint instead of the regular one because
+/// it returns standard GeoJSON FeatureCollection format, which is
+/// much cleaner to parse. Each feature has properties + geometry
+/// in a predictable structure.
+///
+/// Endpoint: https://eonet.gsfc.nasa.gov/api/v3/events/geojson
+/// No auth required.
 class NASAEonetService {
   final Dio _dio;
 
-  NASAEonetService({Dio? dio}) : _dio = dio ?? Dio();
+  NASAEonetService({Dio? dio})
+      : _dio = dio ??
+            Dio(BaseOptions(
+              connectTimeout: const Duration(seconds: 15),
+              receiveTimeout: const Duration(seconds: 15),
+            ));
 
-  /// Fetches currently active natural events.
-  Future<List<GlobalEvent>> fetchActiveEvents({int limit = 50}) async {
+  /// Fetches currently active natural events in GeoJSON format.
+  Future<List<GlobalEvent>> fetchActiveEvents({int days = 60}) async {
     try {
       final response = await _dio.get(
-        ApiEndpoints.nasaEonetEvents,
+        'https://eonet.gsfc.nasa.gov/api/v3/events/geojson',
         queryParameters: {
           'status': 'open',
-          'limit': limit,
+          'days': days,
         },
       );
-      return _parseEvents(response.data);
+
+      // EONET sometimes returns content-type as rss+xml instead of json,
+      // which makes Dio return a raw String. Handle both cases.
+      final data = response.data is String
+          ? jsonDecode(response.data as String)
+          : response.data;
+
+      return _parseGeoJson(data);
     } on DioException catch (e) {
       throw NASAEonetException('Failed to fetch EONET data: ${e.message}');
     }
   }
 
-  /// Fetches events for a specific time range (for historical playback).
-  Future<List<GlobalEvent>> fetchEventsByRange({
-    required DateTime startTime,
-    required DateTime endTime,
-  }) async {
-    try {
-      final response = await _dio.get(
-        ApiEndpoints.nasaEonetEvents,
-        queryParameters: {
-          'start': startTime.toUtc().toIso8601String().split('T')[0],
-          'end': endTime.toUtc().toIso8601String().split('T')[0],
-        },
-      );
-      return _parseEvents(response.data);
-    } on DioException catch (e) {
-      throw NASAEonetException('Failed to fetch EONET data: ${e.message}');
-    }
-  }
-
-  List<GlobalEvent> _parseEvents(dynamic data) {
-    final eventsJson = data['events'] as List<dynamic>? ?? [];
+  /// Parses GeoJSON FeatureCollection from EONET.
+  ///
+  /// Each feature looks like:
+  /// {
+  ///   "type": "Feature",
+  ///   "properties": {
+  ///     "id": "EONET_19405",
+  ///     "title": "Wildfire, Waukesha, Wisconsin",
+  ///     "categories": [{"id": "wildfires", "title": "Wildfires"}],
+  ///     "sources": [{"id": "IRWIN", "url": "..."}],
+  ///     "date": "2026-04-09T15:09:00Z",
+  ///     "magnitudeValue": 1375.50,
+  ///     "magnitudeUnit": "acres"
+  ///   },
+  ///   "geometry": {
+  ///     "type": "Point",
+  ///     "coordinates": [-88.483243, 42.9227232]
+  ///   }
+  /// }
+  List<GlobalEvent> _parseGeoJson(dynamic data) {
+    final features = data['features'] as List<dynamic>? ?? [];
     final events = <GlobalEvent>[];
+    // Track seen IDs to avoid duplicates (EONET returns one feature
+    // per observation, so the same event can appear multiple times)
+    final seenIds = <String>{};
 
-    for (final event in eventsJson) {
+    for (final feature in features) {
       try {
-        final id = event['id'] as String;
-        final title = event['title'] as String? ?? 'Unknown event';
-        final categories = event['categories'] as List<dynamic>? ?? [];
-        final geometries = event['geometries'] as List<dynamic>? ?? [];
-        final sources = event['sources'] as List<dynamic>? ?? [];
+        final props = feature['properties'] as Map<String, dynamic>;
+        final geometry = feature['geometry'] as Map<String, dynamic>?;
 
-        if (geometries.isEmpty) continue;
+        if (geometry == null) continue;
 
-        // Use the most recent geometry (last in the list)
-        final latestGeo = geometries.last;
-        final coords = latestGeo['coordinates'] as List<dynamic>;
-        final geoDate = latestGeo['date'] as String? ?? '';
+        final id = props['id']?.toString() ?? '';
+        if (id.isEmpty) continue;
 
-        // EONET returns [longitude, latitude] for Point geometry
-        double latitude;
-        double longitude;
+        // Skip duplicate events — keep only the first (most recent) one
+        if (seenIds.contains(id)) continue;
+        seenIds.add(id);
 
-        if (latestGeo['type'] == 'Point') {
-          longitude = (coords[0] as num).toDouble();
-          latitude = (coords[1] as num).toDouble();
-        } else {
-          // Polygon — take centroid of first coordinate set
-          final ring = coords[0] as List<dynamic>;
-          double sumLat = 0, sumLon = 0;
-          for (final point in ring) {
-            sumLon += (point[0] as num).toDouble();
-            sumLat += (point[1] as num).toDouble();
-          }
-          longitude = sumLon / ring.length;
-          latitude = sumLat / ring.length;
-        }
+        final title = props['title']?.toString() ?? 'Unknown event';
+        final categories = props['categories'] as List<dynamic>? ?? [];
+        final sources = props['sources'] as List<dynamic>? ?? [];
+        final dateStr = props['date']?.toString() ?? '';
+        final magnitudeValue = props['magnitudeValue'];
+        final magnitudeUnit = props['magnitudeUnit']?.toString();
+
+        // Parse coordinates from geometry
+        final coords = geometry['coordinates'] as List<dynamic>?;
+        if (coords == null || coords.length < 2) continue;
+
+        final longitude = (coords[0] as num).toDouble();
+        final latitude = (coords[1] as num).toDouble();
 
         // Map EONET category to our EventCategory
         final category = _mapCategory(categories);
 
-        // Build source URL from first source
+        // Build source URL
         final sourceUrl = sources.isNotEmpty
-            ? sources.first['url'] as String?
+            ? sources.first['url']?.toString()
             : null;
+
+        // Build description with magnitude if available
+        final description = _buildDescription(
+          title, category, magnitudeValue, magnitudeUnit,
+        );
 
         events.add(GlobalEvent(
           id: 'eonet_$id',
           title: title,
-          description: _buildDescription(title, category, geometries.length),
+          description: description,
           category: category,
-          severity: _estimateSeverity(category, geometries.length),
+          severity: _estimateSeverity(category, magnitudeValue),
           latitude: latitude,
           longitude: longitude,
           locationName: _extractLocation(title),
-          timestamp: DateTime.tryParse(geoDate)?.toLocal() ?? DateTime.now(),
+          timestamp: DateTime.tryParse(dateStr)?.toLocal() ?? DateTime.now(),
           source: EventSource.nasaEonet,
           sourceUrl: sourceUrl,
           metadata: {
             'eonet_id': id,
-            'geometry_count': geometries.length,
-            'categories': categories.map((c) => c['title']).toList(),
+            'magnitude_value': magnitudeValue,
+            'magnitude_unit': magnitudeUnit,
           },
         ));
       } catch (e) {
+        // Skip malformed features
         continue;
       }
     }
@@ -121,11 +140,10 @@ class NASAEonetService {
   }
 
   /// Maps EONET category IDs to our EventCategory enum.
-  /// EONET categories: https://eonet.gsfc.nasa.gov/api/v3/categories
   EventCategory _mapCategory(List<dynamic> categories) {
     if (categories.isEmpty) return EventCategory.wildfire;
 
-    final catId = categories.first['id'] as String? ?? '';
+    final catId = categories.first['id']?.toString() ?? '';
 
     switch (catId) {
       case 'wildfires':
@@ -139,36 +157,65 @@ class NASAEonetService {
       case 'drought':
       case 'dustHaze':
       case 'tempExtremes':
-        return EventCategory.wildfire; // climate-related
+        return EventCategory.wildfire;
+      case 'seaLakeIce':
+      case 'snow':
+        return EventCategory.floodStorm;
       default:
         return EventCategory.wildfire;
     }
   }
 
-  /// Estimates severity based on category and how many geometry
-  /// entries exist (more entries = longer-running = potentially worse).
-  EventSeverity _estimateSeverity(EventCategory category, int geoCount) {
-    if (geoCount > 20) return EventSeverity.critical;
-    if (geoCount > 10) return EventSeverity.high;
-    if (geoCount > 3) return EventSeverity.medium;
-    return EventSeverity.low;
+  /// Estimates severity based on category and magnitude.
+  EventSeverity _estimateSeverity(EventCategory category, dynamic magnitude) {
+    if (magnitude == null) return EventSeverity.medium;
+
+    final value = (magnitude is num) ? magnitude.toDouble() : 0.0;
+
+    // For wildfires, magnitude is in acres
+    if (category == EventCategory.wildfire) {
+      if (value > 50000) return EventSeverity.critical;
+      if (value > 10000) return EventSeverity.high;
+      if (value > 1000) return EventSeverity.medium;
+      return EventSeverity.low;
+    }
+
+    // For storms, magnitude is in knots (wind speed)
+    if (category == EventCategory.floodStorm) {
+      if (value > 100) return EventSeverity.critical;
+      if (value > 64) return EventSeverity.high;
+      if (value > 34) return EventSeverity.medium;
+      return EventSeverity.low;
+    }
+
+    return EventSeverity.medium;
   }
 
   /// Extracts a rough location name from the EONET title.
-  /// Titles are often like "Wildfire - SW of City, Country".
   String _extractLocation(String title) {
+    // Titles often look like "Wildfire - SW of City, Country"
+    // or "HARRISON Wildfire, Osage, Oklahoma"
     final parts = title.split(' - ');
-    return parts.length > 1 ? parts.sublist(1).join(' - ').trim() : title;
+    if (parts.length > 1) return parts.sublist(1).join(' - ').trim();
+
+    // Try splitting by comma for "Name, Location" format
+    final commaParts = title.split(', ');
+    if (commaParts.length > 1) return commaParts.sublist(1).join(', ').trim();
+
+    return title;
   }
 
   String _buildDescription(
     String title,
     EventCategory category,
-    int geoCount,
+    dynamic magnitudeValue,
+    String? magnitudeUnit,
   ) {
-    final typeLabel = category.label.toLowerCase();
-    return '$title. This $typeLabel event has $geoCount recorded '
-        'observation${geoCount == 1 ? '' : 's'} from NASA EONET.';
+    final typeLabel = category.label;
+    if (magnitudeValue != null && magnitudeUnit != null) {
+      return '$typeLabel event: $title. Magnitude: $magnitudeValue $magnitudeUnit.';
+    }
+    return '$typeLabel event: $title. Tracked by NASA EONET.';
   }
 }
 
