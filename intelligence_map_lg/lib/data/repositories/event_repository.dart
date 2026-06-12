@@ -65,11 +65,20 @@ class EventRepository {
     // Each future catches its own errors so one failure doesn't kill the rest
     final futures = <Future<void>>[];
 
+    // Initialize all enabled sources as "loading" so UI can show status
     if (enabledSources.contains(EventSource.usgs)) {
+      results[EventSource.usgs] = const SourceResult(
+        source: EventSource.usgs,
+        status: SourceStatus.loading,
+      );
       futures.add(_fetchUSGS().then((r) => results[EventSource.usgs] = r));
     }
 
     if (enabledSources.contains(EventSource.nasaEonet)) {
+      results[EventSource.nasaEonet] = const SourceResult(
+        source: EventSource.nasaEonet,
+        status: SourceStatus.loading,
+      );
       futures.add(
         _fetchNASA().then((r) => results[EventSource.nasaEonet] = r),
       );
