@@ -10,6 +10,7 @@ import '../../logic/blocs/events/events_state.dart';
 import '../../services/ssh_service.dart';
 import '../../services/kml_service.dart';
 
+
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
 
@@ -227,6 +228,7 @@ class _MapScreenState extends State<MapScreen> {
     // Generate and send KML
     final kmlContent = kml.generateEventsKML(state.filteredEvents);
     final success = await ssh.sendKML(kmlContent);
+    
 
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(

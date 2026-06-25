@@ -1,13 +1,10 @@
 import 'package:dartssh2/dartssh2.dart';
 import 'dart:typed_data';
+import 'dart:convert';
+import '../helpers/kml_helper.dart';
 
 /// Manages SSH connections to the Liquid Galaxy master node.
-///
-/// Handles:
-/// - Connecting/disconnecting to the LG rig
-/// - Sending KML files to the master
-/// - Executing flyto navigation commands
-/// - LG system commands (clear KML, reboot, shutdown)
+/// Patterns matched from production LG app store applications.
 class SSHService {
   SSHClient? _client;
   String? _host;
@@ -18,6 +15,7 @@ class SSHService {
 
   bool get isConnected => _client != null;
   String? get host => _host;
+  String? get password => _password;
 
   /// Establishes SSH connection to the LG master node.
   Future<bool> connect({
@@ -28,7 +26,6 @@ class SSHService {
     int numberOfRigs = 3,
   }) async {
     try {
-      // Disconnect existing connection if any
       disconnect();
 
       _host = host;
@@ -44,6 +41,8 @@ class SSHService {
         onPasswordRequest: () => password,
       );
 
+      await sendLogo();
+
       return true;
     } catch (e) {
       _client = null;
@@ -51,13 +50,11 @@ class SSHService {
     }
   }
 
-  /// Disconnects from the LG master node.
   void disconnect() {
     _client?.close();
     _client = null;
   }
 
-  /// Reconnects using the last known credentials.
   Future<bool> reconnect() async {
     if (_host == null || _username == null || _password == null) {
       return false;
@@ -72,46 +69,28 @@ class SSHService {
   }
 
   /// Executes a shell command on the LG master.
+  /// Uses _client!.execute() matching the production app pattern.
   Future<String?> execute(String command) async {
     if (_client == null) return null;
 
     try {
       final result = await _client!.run(command);
-      return String.fromCharCodes(result);
+      return utf8.decode(result);
     } catch (e) {
       return null;
     }
   }
 
-  /// Sends a KML string to the LG master and loads it in Google Earth.
-  /// The KML is written to /var/www/html/ and loaded via a NetworkLink
-  /// on the master's kmls.txt.
+  // KML OPERATIONS
+
+  /// Sends KML to the LG rig.
+  /// ONLY writes to the KML file and kmls.txt.
+  /// NEVER write to master.kml — sync_nlc.php handles loading on all screens.
   Future<bool> sendKML(String kmlContent, {String fileName = 'global_pulse.kml'}) async {
-    if (_client == null) return false;
+    if (_client == null || _host == null) return false;
 
     try {
-      // Write KML to the master's web server directory
-      final filePath = '/var/www/html/$fileName';
-      final escaped = kmlContent.replaceAll("'", "'\\''");
-      await execute("echo '$escaped' > $filePath");
-
-      // Add to kmls.txt so Google Earth picks it up
-      // The LG system loads KMLs listed in this file
-      await execute(
-        'echo "http://localhost:81/$fileName" > /var/www/html/kmls.txt',
-      );
-
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  /// Sends a KML file via SFTP for larger payloads.
-  Future<bool> uploadKML(String kmlContent, {String fileName = 'global_pulse.kml'}) async {
-    if (_client == null) return false;
-
-    try {
+      // 1. Upload file to /var/www/html/ 
       final sftp = await _client!.sftp();
       final file = await sftp.open(
         '/var/www/html/$fileName',
@@ -120,13 +99,92 @@ class SSHService {
             SftpFileOpenMode.write,
       );
       await file.write(
-        Stream.value(Uint8List.fromList(kmlContent.codeUnits)),
+        Stream.value(Uint8List.fromList(utf8.encode(kmlContent))),
       );
       await file.close();
 
-      // Register in kmls.txt
+      // 2. Write URL to kmls.txt 
+      await execute('echo "http://lg1:81/$fileName" > /var/www/html/kmls.txt');
+
+      
+
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<bool> clearKML() async {
+    if (_client == null) return false;
+
+    try {
+      
+      await execute('echo "" > /var/www/html/kmls.txt');
+      await execute('echo "" > /tmp/query.txt');
+      await execute('rm -f /var/www/html/global_pulse.kml');
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // SLAVE REFRESH 
+
+  /// Sets refresh interval on a slave's myplaces.kml so Google Earth
+  /// periodically re-reads slave_X.kml. Idempotent: removes existing
+  /// refresh tags first, then adds a single clean set.
+  Future<void> _setSlaveRefresh(int screenNumber) async {
+    final search =
+        '<href>##LG_PHPIFACE##kml\\/slave_$screenNumber.kml<\\/href>';
+    final replace =
+        '<href>##LG_PHPIFACE##kml\\/slave_$screenNumber.kml<\\/href>'
+        '<refreshMode>onInterval<\\/refreshMode>'
+        '<refreshInterval>2<\\/refreshInterval>';
+
+    await execute(
+      'sshpass -p $_password ssh -o StrictHostKeyChecking=no lg$screenNumber '
+      "\"echo $_password | sudo -S sed -i 's/$replace/$search/g' ~/earth/kml/slave/myplaces.kml\"",
+    );
+    await execute(
+      'sshpass -p $_password ssh -o StrictHostKeyChecking=no lg$screenNumber '
+      "\"echo $_password | sudo -S sed -i 's/$search/$replace/g' ~/earth/kml/slave/myplaces.kml\"",
+    );
+  }
+
+  // LOGO OPERATIONS
+
+  /// Sends the Global Pulse logo to the leftmost slave screen.
+  Future<bool> sendLogo() async {
+    if (_client == null) return false;
+
+    try {
+      final leftScreen = (_numberOfRigs / 2).floor() + 2;
+      final logoKml = KmlHelper.generateLogoKML();
+
       await execute(
-        'echo "http://localhost:81/$fileName" > /var/www/html/kmls.txt',
+        "echo '$logoKml' > /var/www/html/kml/slave_$leftScreen.kml",
+      );
+
+      await _setSlaveRefresh(leftScreen);
+
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Clears the logo from the leftmost slave screen.
+  Future<bool> clearLogo() async {
+    if (_client == null) return false;
+
+    try {
+      final leftScreen = (_numberOfRigs / 2).floor() + 2;
+      const emptyKml = '<?xml version="1.0" encoding="UTF-8"?>'
+          '<kml xmlns="http://www.opengis.net/kml/2.2">'
+          '<Document><name>Empty</name></Document></kml>';
+
+      await execute(
+        "echo '$emptyKml' > /var/www/html/kml/slave_$leftScreen.kml",
       );
 
       return true;
@@ -135,8 +193,9 @@ class SSHService {
     }
   }
 
-  /// Sends a flyto command to navigate the LG camera to a specific
-  /// latitude, longitude, altitude, heading, tilt, and range.
+  // NAVIGATION
+
+  /// Sends a flyto command to navigate the LG camera.
   Future<bool> flyTo({
     required double latitude,
     required double longitude,
@@ -145,91 +204,84 @@ class SSHService {
     double tilt = 0,
     double range = 1500000,
   }) async {
-    final flyToKml = '''
-flytoview=<LookAt>
-  <longitude>$longitude</longitude>
-  <latitude>$latitude</latitude>
-  <altitude>$altitude</altitude>
-  <heading>$heading</heading>
-  <tilt>$tilt</tilt>
-  <range>$range</range>
-  <altitudeMode>relativeToGround</altitudeMode>
-</LookAt>
-''';
+    final lookAt = 'flytoview=<LookAt><longitude>$longitude</longitude>'
+        '<latitude>$latitude</latitude><altitude>$altitude</altitude>'
+        '<heading>$heading</heading><tilt>$tilt</tilt>'
+        '<range>$range</range>'
+        '<altitudeMode>relativeToGround</altitudeMode></LookAt>';
 
-    return await execute(
-          'echo "$flyToKml" > /tmp/query.txt',
-        ) !=
-        null;
+    return await execute("echo '$lookAt' > /tmp/query.txt") != null;
   }
+  
 
-  /// Clears all KML overlays from the LG rig.
-  Future<bool> clearKML() async {
+  /// Reboots the entire LG rig.
+  /// Uses sshpass + ssh -t pattern from production app.
+  Future<bool> reboot() async {
     if (_client == null) return false;
 
     try {
-      await execute('echo "" > /var/www/html/kmls.txt');
-      // Also clear the temporary query file
-      await execute('echo "" > /tmp/query.txt');
+      for (int i = _numberOfRigs; i >= 1; i--) {
+        await execute(
+          'sshpass -p $_password ssh -t lg$i "echo $_password | sudo -S reboot"',
+        );
+        if (i > 1) {
+          await Future.delayed(const Duration(milliseconds: 200));
+        }
+      }
       return true;
     } catch (e) {
       return false;
     }
   }
 
-  /// Clears the logo overlay from the LG slave screens.
-  Future<bool> clearLogo() async {
-    if (_client == null) return false;
-
-    for (int i = 2; i <= _numberOfRigs; i++) {
-      await execute(
-        'sshpass -p "$_password" ssh -o StrictHostKeyChecking=no '
-        '$_username@lg$i "echo \'\' > /var/www/html/kml/slave_$i.kml"',
-      );
-    }
-    return true;
-  }
-
-  /// Reboots the entire LG rig (all screens).
-  Future<bool> reboot() async {
-    if (_client == null) return false;
-
-    for (int i = _numberOfRigs; i >= 1; i--) {
-      if (i == 1) {
-        await execute('sudo reboot');
-      } else {
-        await execute(
-          'sshpass -p "$_password" ssh -o StrictHostKeyChecking=no '
-          '$_username@lg$i "sudo reboot"',
-        );
-      }
-    }
-    return true;
-  }
-
   /// Shuts down the entire LG rig.
   Future<bool> shutdown() async {
     if (_client == null) return false;
 
-    for (int i = _numberOfRigs; i >= 1; i--) {
-      if (i == 1) {
-        await execute('sudo poweroff');
-      } else {
+    try {
+      for (int i = _numberOfRigs; i >= 1; i--) {
         await execute(
-          'sshpass -p "$_password" ssh -o StrictHostKeyChecking=no '
-          '$_username@lg$i "sudo poweroff"',
+          'sshpass -p $_password ssh -t lg$i "echo $_password | sudo -S shutdown now"',
         );
+        if (i > 1) {
+          await Future.delayed(const Duration(milliseconds: 200));
+        }
       }
+      return true;
+    } catch (e) {
+      return false;
     }
-    return true;
   }
 
-  /// Refreshes Google Earth on the LG rig.
+  /// Relaunches Google Earth by restarting lightdm.
   Future<bool> refresh() async {
-    return await execute(
-          'sshpass -p "$_password" ssh -o StrictHostKeyChecking=no '
-          '$_username@lg1 "killall -SIGUSR1 googleearth-bin"',
-        ) !=
-        null;
+    if (_client == null) return false;
+
+    try {
+      final cmd = """
+        RELAUNCH_CMD="\\
+        if [ -f /etc/init/lxdm.conf ]; then
+          export SERVICE=lxdm
+        elif [ -f /etc/init/lightdm.conf ]; then
+          export SERVICE=lightdm
+        else
+          exit 1
+        fi
+
+        if [[ \\\$(service \\\$SERVICE status) =~ 'stop' ]]; then
+          echo $_password | sudo -S service \\\${SERVICE} start
+        else
+          echo $_password | sudo -S service \\\${SERVICE} restart
+        fi
+        " && sshpass -p $_password ssh -x -t lg@lg1 "\$RELAUNCH_CMD\"""";
+
+
+      await execute(cmd);
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
+
+  
 }

@@ -1,5 +1,5 @@
 import '../data/models/global_event.dart';
-
+import 'dart:convert';
 /// Generates KML strings from [GlobalEvent] objects for rendering
 /// on the Liquid Galaxy rig.
 ///
@@ -12,16 +12,20 @@ class KMLService {
   /// Generates a complete KML document containing all provided events
   /// as 3D placemarks.
   String generateEventsKML(List<GlobalEvent> events) {
-    final placemarks = events.map(_eventToPlacemark).join('\n');
+    // Filter out events with invalid coordinates
+    final validEvents = events.where((e) =>
+        e.latitude >= -90 &&
+        e.latitude <= 90 &&
+        e.longitude >= -180 &&
+        e.longitude <= 180).toList();
+    final placemarks = validEvents.map(_eventToPlacemark).join('\n');
 
     return '''<?xml version="1.0" encoding="UTF-8"?>
-<kml xmlns="http://www.opengis.net/kml/2.2"
-     xmlns:gx="http://www.google.com/kml/ext/2.2">
+<kml xmlns="http://www.opengis.net/kml/2.2">
   <Document>
     <name>Global Pulse Events</name>
     <description>AI-Powered World Intelligence Map</description>
     <open>1</open>
-${_generateStyles()}
 $placemarks
   </Document>
 </kml>''';
@@ -85,107 +89,77 @@ $placemarks
   }
 
   /// Converts a single [GlobalEvent] into a KML Placemark string.
+  
   String _eventToPlacemark(GlobalEvent event) {
-    final styleId = _styleIdForCategory(event.category);
-    final description = _buildBalloonDescription(event);
+    final color = _kmlColorForCategory(event.category);
+    final icon = _iconForCategory(event.category);
+    final scale = _scaleForSeverity(event.severity);
 
     return '''
     <Placemark id="${event.id}">
       <name>${_escapeXml(event.title)}</name>
-      <description><![CDATA[$description]]></description>
-      <styleUrl>#$styleId</styleUrl>
-      <LookAt>
-        <longitude>${event.longitude}</longitude>
-        <latitude>${event.latitude}</latitude>
-        <altitude>0</altitude>
-        <heading>0</heading>
-        <tilt>45</tilt>
-        <range>${_rangeForSeverity(event.severity)}</range>
-        <altitudeMode>relativeToGround</altitudeMode>
-      </LookAt>
+      <description>${_escapeXml(event.description)}</description>
+      <Style>
+        <IconStyle>
+          <color>$color</color>
+          <scale>$scale</scale>
+          <Icon>
+            <href>$icon</href>
+          </Icon>
+        </IconStyle>
+      </Style>
       <Point>
-        <extrude>1</extrude>
-        <altitudeMode>relativeToGround</altitudeMode>
-        <coordinates>${event.longitude},${event.latitude},${event.kmlAltitude}</coordinates>
+        <coordinates>${event.longitude},${event.latitude},0</coordinates>
       </Point>
     </Placemark>''';
   }
 
   /// Builds the HTML content for the placemark's description balloon.
-  String _buildBalloonDescription(GlobalEvent event) {
-    final severityColor = _htmlColorForSeverity(event.severity);
+  
 
-    return '''
-<div style="font-family: Arial, sans-serif; max-width: 350px; padding: 8px;">
-  <h3 style="margin: 0 0 8px 0; color: #333;">${_escapeXml(event.title)}</h3>
-  <div style="display: inline-block; padding: 2px 8px; border-radius: 4px;
-    background: $severityColor; color: white; font-size: 12px; font-weight: bold;
-    margin-bottom: 8px;">
-    ${event.severity.label}
-  </div>
-  <p style="margin: 8px 0; color: #555; font-size: 13px;">
-    ${_escapeXml(event.description)}
-  </p>
-  <table style="font-size: 12px; color: #666;">
-    <tr><td style="padding-right: 8px;"><b>Category:</b></td>
-        <td>${event.category.label}</td></tr>
-    <tr><td style="padding-right: 8px;"><b>Location:</b></td>
-        <td>${_escapeXml(event.locationName)}</td></tr>
-    <tr><td style="padding-right: 8px;"><b>Time:</b></td>
-        <td>${event.timeAgo}</td></tr>
-    <tr><td style="padding-right: 8px;"><b>Source:</b></td>
-        <td>${event.source.label}</td></tr>
-  </table>
-</div>''';
-  }
 
-  /// Generates KML Style elements for each event category.
-  String _generateStyles() {
-    final categories = EventCategory.values;
-    final styles = StringBuffer();
-
-    for (final category in categories) {
-      styles.writeln('''
-    <Style id="${_styleIdForCategory(category)}">
-      <IconStyle>
-        <color>${category.kmlColor}</color>
-        <scale>1.2</scale>
-        <Icon>
-          <href>http://maps.google.com/mapfiles/kml/shapes/shaded_dot.png</href>
-        </Icon>
-      </IconStyle>
-      <LineStyle>
-        <color>${category.kmlColor}</color>
-        <width>2</width>
-      </LineStyle>
-      <PolyStyle>
-        <color>80${category.kmlColor.substring(2)}</color>
-      </PolyStyle>
-      <BalloonStyle>
-        <bgColor>ffffffff</bgColor>
-        <textColor>ff000000</textColor>
-      </BalloonStyle>
-    </Style>''');
-    }
-
-    return styles.toString();
-  }
-
-  String _styleIdForCategory(EventCategory category) {
+  String _kmlColorForCategory(EventCategory category) {
     switch (category) {
       case EventCategory.earthquake:
-        return 'style_earthquake';
+        return 'ff0000ff'; // red
       case EventCategory.floodStorm:
-        return 'style_flood';
+        return 'ffff0000'; // blue
       case EventCategory.wildfire:
-        return 'style_wildfire';
+        return 'ff00a5ff'; // orange
       case EventCategory.diseaseOutbreak:
-        return 'style_disease';
+        return 'ffff00ff'; // purple
       case EventCategory.conflict:
-        return 'style_conflict';
+        return 'ff00ffff'; // yellow
     }
   }
 
+  String _iconForCategory(EventCategory category) {
+    switch (category) {
+      case EventCategory.earthquake:
+        return 'http://maps.google.com/mapfiles/kml/paddle/red-circle.png';
+      case EventCategory.floodStorm:
+        return 'http://maps.google.com/mapfiles/kml/paddle/blu-circle.png';
+      case EventCategory.wildfire:
+        return 'http://maps.google.com/mapfiles/kml/paddle/orange-circle.png';
+      case EventCategory.diseaseOutbreak:
+        return 'http://maps.google.com/mapfiles/kml/paddle/purple-circle.png';
+      case EventCategory.conflict:
+        return 'http://maps.google.com/mapfiles/kml/paddle/ylw-circle.png';
+    }
+  }
+
+  double _scaleForSeverity(EventSeverity severity) {
+    switch (severity) {
+      case EventSeverity.critical:
+        return 2.0;
+      case EventSeverity.high:
+        return 1.6;
+      case EventSeverity.medium:
+        return 1.2;
+      case EventSeverity.low:
+        return 0.8;
+    }
+  }
   double _rangeForSeverity(EventSeverity severity) {
     switch (severity) {
       case EventSeverity.critical:
@@ -199,26 +173,22 @@ $placemarks
     }
   }
 
-  String _htmlColorForSeverity(EventSeverity severity) {
-    switch (severity) {
-      case EventSeverity.critical:
-        return '#EF4444';
-      case EventSeverity.high:
-        return '#F97316';
-      case EventSeverity.medium:
-        return '#EAB308';
-      case EventSeverity.low:
-        return '#6B7280';
-    }
-  }
+  
 
   /// Escapes special XML characters to prevent KML parsing errors.
+  /// Removes or escapes characters that break XML/KML parsing.
   String _escapeXml(String text) {
-    return text
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&apos;');
+    // First replace & (must be first, before adding &-based escapes)
+    var escaped = text.replaceAll('&', '&amp;');
+    escaped = escaped.replaceAll('<', '&lt;');
+    escaped = escaped.replaceAll('>', '&gt;');
+    escaped = escaped.replaceAll('"', '&quot;');
+    escaped = escaped.replaceAll("'", '&apos;');
+    
+    // Remove any control characters (bytes 0x00-0x1F except tab/newline/CR)
+    // These are invalid in XML and will cause parsing failures
+    escaped = escaped.replaceAll(RegExp(r'[\x00-\x08\x0B\x0C\x0E-\x1F]'), '');
+    
+    return escaped;
   }
 }
