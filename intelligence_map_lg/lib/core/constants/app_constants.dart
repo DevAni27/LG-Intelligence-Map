@@ -54,5 +54,5 @@ class ApiEndpoints {
   static const String nasaEonetCategories = 'https://eonet.gsfc.nasa.gov/api/v3/categories';
 
   // WHO Disease Outbreak News (RSS)
-  static const String whoRss = 'https://www.who.int/feeds/entity/don/en/rss.xml';
+  static const String who = "https://www.who.int/api/news/diseaseoutbreaknews?sf_culture=en&\$orderby=PublicationDate+desc&\$top=100";
 }
