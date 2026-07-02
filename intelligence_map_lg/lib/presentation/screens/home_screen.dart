@@ -37,12 +37,16 @@ class HomeScreen extends StatelessWidget {
                           children: [
                             Text(
                               'Global Pulse',
-                              style: Theme.of(context).textTheme.headlineLarge,
+                              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                                fontWeight: FontWeight.w900,
+                              ),
                             ),
                             const SizedBox(height: 4),
                             Text(
                               'Monitoring global events in real-time',
-                              style: Theme.of(context).textTheme.bodyMedium,
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ],
                         ),
@@ -59,6 +63,15 @@ class HomeScreen extends StatelessWidget {
                     child: _buildStatsGrid(state),
                   ),
                 ),
+
+                //Severity Breakdown card
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                    child: _buildSeverityBreakdownCard(state),
+                  ),
+                ),
+            
 
                 // ── Daily Global Pulse Card ─────────────────
                 SliverToBoxAdapter(
@@ -77,7 +90,9 @@ class HomeScreen extends StatelessWidget {
                       children: [
                         Text(
                           'Recent Events',
-                          style: Theme.of(context).textTheme.titleLarge,
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
                         TextButton(
                           onPressed: () {
@@ -174,6 +189,70 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildSeverityBreakdownCard(EventsState state) {
+  return Container(
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: AppTheme.cardColor,         
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(
+        color: Colors.white.withValues(alpha: 0.06),
+      ),
+    ),
+    child: Column(
+      children: [
+        _buildSeverityRow(label: 'Critical', count: state.criticalCount, color: const Color(0xFFEF4444)),
+        _buildSeverityRow(label: 'High',     count: state.highCount,     color: const Color(0xFFF97316)),
+        _buildSeverityRow(label: 'Medium',   count: state.mediumCount,   color: const Color(0xFFEAB308)),
+        _buildSeverityRow(label: 'Low',      count: state.lowCount,      color: const Color(0xFF22C55E)),
+      ],
+    ),
+  );
+}
+
+  Widget _buildSeverityRow({
+  required String label,
+  required int count,
+  required Color color,
+}) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 6),
+    child: Row(
+      children: [
+        //the colored dot
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 10),
+
+        //the severity label
+        Text(
+          label,
+          style: const TextStyle(color: Colors.white70, fontSize: 17),
+        ),
+
+        
+        const Expanded(child: SizedBox()),
+
+        // the severity count
+        Text(
+          '$count',
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 17,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
   Widget _buildDailyPulseCard(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -192,17 +271,19 @@ class HomeScreen extends StatelessWidget {
               children: [
                 Text(
                   'Daily Global Pulse',
-                  style: Theme.of(context).textTheme.titleMedium,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'AI-generated 60s briefing',
-                  style: Theme.of(context).textTheme.bodySmall,
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Coming in Phase 4',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: AppTheme.textTertiary,
                       ),
                 ),
