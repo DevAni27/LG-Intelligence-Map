@@ -44,6 +44,7 @@ class EventsState extends Equatable {
     this.enabledSources = const {
       EventSource.usgs,
       EventSource.nasaEonet,
+      EventSource.who,
     },
     this.activeCategories = const {},
     this.activeSeverities = const {},

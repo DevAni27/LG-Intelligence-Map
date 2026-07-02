@@ -234,6 +234,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _buildSourceToggle(context, state, EventSource.usgs, 'USGS'),
                     _buildSourceToggle(
                         context, state, EventSource.nasaEonet, 'NASA EONET'),
+                    _buildSourceToggle(context, state, EventSource.who, 'WHO'),
                   ],
                 ),
               );

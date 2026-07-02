@@ -1,6 +1,7 @@
 import '../models/global_event.dart';
 import '../sources/usgs_service.dart';
 import '../sources/nasa_eonet_service.dart';
+import '../sources/who_service.dart';
 
 /// Represents the status of a single data source.
 enum SourceStatus { idle, loading, loaded, error }
@@ -43,12 +44,15 @@ class SourceResult {
 class EventRepository {
   final USGSService _usgsService;
   final NASAEonetService _nasaEonetService;
+  final WHOService _whoService;
 
   EventRepository({
     USGSService? usgsService,
     NASAEonetService? nasaEonetService,
+    WHOService? whoService,
   })  : _usgsService = usgsService ?? USGSService(),
-        _nasaEonetService = nasaEonetService ?? NASAEonetService();
+        _nasaEonetService = nasaEonetService ?? NASAEonetService(),
+        _whoService = whoService ?? WHOService();
 
   /// Fetches events from all enabled sources in parallel.
   /// Returns a map of source → result, so each source has its own
@@ -57,6 +61,7 @@ class EventRepository {
     Set<EventSource> enabledSources = const {
       EventSource.usgs,
       EventSource.nasaEonet,
+      EventSource.who,
     },
   }) async {
     final results = <EventSource, SourceResult>{};
@@ -81,6 +86,16 @@ class EventRepository {
       );
       futures.add(
         _fetchNASA().then((r) => results[EventSource.nasaEonet] = r),
+      );
+    }
+
+    if (enabledSources.contains(EventSource.who)) {
+      results[EventSource.who] = const SourceResult(
+        source: EventSource.who,
+        status: SourceStatus.loading,
+      );
+      futures.add(
+        _fetchWHO().then((r) => results[EventSource.who] = r),
       );
     }
 
@@ -170,6 +185,24 @@ class EventRepository {
     } catch (e) {
       return SourceResult(
         source: EventSource.nasaEonet,
+        status: SourceStatus.error,
+        errorMessage: e.toString(),
+      );
+    }
+  }
+
+  Future<SourceResult> _fetchWHO() async {
+    try {
+      final events = await _whoService.fetchWHOData();
+      return SourceResult(
+        source: EventSource.who,
+        status: SourceStatus.loaded,
+        events: events,
+        lastUpdated: DateTime.now(),
+      );
+    } catch (e) {
+      return SourceResult(
+        source: EventSource.who,
         status: SourceStatus.error,
         errorMessage: e.toString(),
       );
