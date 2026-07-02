@@ -48,8 +48,8 @@ class EventCard extends StatelessWidget {
                 children: [
                   Text(
                     event.title,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontSize: 15,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontSize: 16,
                         ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -60,13 +60,15 @@ class EventCard extends StatelessWidget {
                       Icon(
                         Icons.location_on_outlined,
                         size: 14,
-                        color: AppTheme.textTertiary,
+                        color: const Color.fromARGB(255, 155, 175, 184),
                       ),
                       const SizedBox(width: 4),
                       Flexible(
                         child: Text(
                           event.locationName,
-                          style: Theme.of(context).textTheme.bodySmall,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: const Color.fromARGB(255, 155, 175, 184),
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -75,7 +77,7 @@ class EventCard extends StatelessWidget {
                       Text(
                         event.timeAgo,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AppTheme.textTertiary,
+                              color: const Color.fromARGB(255, 155, 175, 184),
                             ),
                       ),
                     ],
@@ -120,13 +122,13 @@ class _SeverityBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: _badgeColor.withValues(alpha: 0.15),
+        color: _badgeColor.withValues(alpha: 0.30),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
         severity.label.toUpperCase(),
         style: TextStyle(
-          color: _badgeColor,
+          color: const Color.fromARGB(255, 215, 215, 215),
           fontSize: 10,
           fontWeight: FontWeight.w700,
           letterSpacing: 0.5,
