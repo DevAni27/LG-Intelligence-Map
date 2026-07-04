@@ -8,6 +8,8 @@ import '../../logic/blocs/events/events_state.dart';
 import '../widgets/event_card.dart';
 import '../widgets/stat_card.dart';
 import '../widgets/connection_status.dart';
+import '../widgets/top_regions_card.dart';
+import '../../core/utils/top_region_helper.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -69,6 +71,17 @@ class HomeScreen extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
                     child: _buildSeverityBreakdownCard(state),
+                  ),
+                ),
+
+                //Top Active Regions card
+
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                    child: TopRegionCard(
+                      regions: TopRegionHelper.getTopRegions(state.filteredEvents),
+                    ),
                   ),
                 ),
             
@@ -200,7 +213,17 @@ class HomeScreen extends StatelessWidget {
       ),
     ),
     child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Text(
+          "Severity Breakdown",
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            height: 2,
+          ),
+        ),
         _buildSeverityRow(label: 'Critical', count: state.criticalCount, color: const Color(0xFFEF4444)),
         _buildSeverityRow(label: 'High',     count: state.highCount,     color: const Color(0xFFF97316)),
         _buildSeverityRow(label: 'Medium',   count: state.mediumCount,   color: const Color(0xFFEAB308)),
