@@ -24,6 +24,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final _passwordController = TextEditingController(text: 'lg');
   int _numberOfRigs = 3;
   bool _isConnecting = false;
+  bool _isConnected = false;
 
   @override
   void initState() {
@@ -60,34 +61,70 @@ class _SettingsScreenState extends State<SettingsScreen> {
       );
       return;
     }
+    try{
+      setState(() => _isConnecting = true);
+      await _saveSettings();
 
-    setState(() => _isConnecting = true);
-    await _saveSettings();
-
-    final ssh = context.read<SSHService>();
-    final success = await ssh.connect(
-      host: _ipController.text,
-      port: int.tryParse(_portController.text) ?? 22,
-      username: _usernameController.text,
-      password: _passwordController.text,
-      numberOfRigs: _numberOfRigs,
+      final ssh = context.read<SSHService>();
+      await ssh.connect(
+        host: _ipController.text,
+        port: int.tryParse(_portController.text) ?? 22,
+        username: _usernameController.text,
+        password: _passwordController.text,
+        numberOfRigs: _numberOfRigs,
     );
-
-    setState(() => _isConnecting = false);
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            success
-                ? 'Connected to LG rig!'
-                : 'Failed to connect. Check credentials.',
+    
+      if (mounted) {
+        setState(() {
+          _isConnecting = false;
+          _isConnected = true;
+      });;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Connected to Rig Successfully",
+            style: TextStyle(color: Colors.white),
+            ),
+            backgroundColor: const Color.fromARGB(255, 14, 102, 17),
           ),
-          backgroundColor:
-              success ? AppTheme.statusConnected : AppTheme.severityCritical,
-        ),
-      );
+        );
+      }
+    } catch(e){
+
+      if (mounted) {
+        setState(() {
+        _isConnecting = false;
+        _isConnected = false;
+      });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Connection Failed: ${e.toString()}",
+              style: const TextStyle(color: Colors.white),
+            ),
+            backgroundColor: Colors.red,
+            
+          ),
+        );
+      }
     }
+    
+  }
+
+  Future <void> _disconnect() async{
+    final ssh = context.read<SSHService>();
+    ssh.disconnect();
+    setState(() => _isConnected = false);
+    if (mounted) {
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Disconnected from Rig Successfully",
+              style: const TextStyle(color: Colors.white),
+            ),
+            backgroundColor: Colors.red,
+            
+          ),
+        );
+      }
   }
 
   @override
@@ -203,16 +240,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(height: 12),
                 SizedBox(
                   width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _isConnecting ? null : _connect,
-                    child: _isConnecting
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
+                  child: _isConnecting
+                      ? const Center(
+                          child: SizedBox(
+                            width: 28,
+                            height: 28,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Text('Connect'),
-                  ),
+                      )
+                      : ElevatedButton(
+                          onPressed: _isConnected ? _disconnect : _connect,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _isConnected ? Colors.red.shade700 : Colors.green.shade700,
+                          ),
+                          child: Text(_isConnected ? 'Disconnect' : 'Connect'),
+                        ),
                 ),
               ],
             ),

@@ -2,6 +2,7 @@ import 'package:dartssh2/dartssh2.dart';
 import 'dart:typed_data';
 import 'dart:convert';
 import '../helpers/kml_helper.dart';
+import 'dart:async'; 
 
 /// Manages SSH connections to the Liquid Galaxy master node.
 /// Patterns matched from production LG app store applications.
@@ -34,19 +35,24 @@ class SSHService {
       _password = password;
       _numberOfRigs = numberOfRigs;
 
-      final socket = await SSHSocket.connect(host, port);
+      final socket = await SSHSocket.connect(host, port).timeout(
+        const Duration(seconds: 8),
+        onTimeout: () => throw Exception("Connection timed out"),
+      );
       _client = SSHClient(
         socket,
         username: username,
         onPasswordRequest: () => password,
       );
+     
 
       await sendLogo();
+      
 
       return true;
     } catch (e) {
       _client = null;
-      return false;
+      rethrow;
     }
   }
 
