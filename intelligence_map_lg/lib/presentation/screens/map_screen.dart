@@ -235,11 +235,12 @@ class _MapScreenState extends State<MapScreen> {
         SnackBar(
           content: Text(
             success
-                ? 'Events sent to LG rig!'
-                : 'Failed to send events to LG.',
+                ? 'Flying to the location!'
+                : 'Failed to fly to the location.',
+                style: const TextStyle(color: Colors.white),
           ),
           backgroundColor:
-              success ? AppTheme.statusConnected : AppTheme.severityCritical,
+              success ? const Color.fromARGB(255, 12, 109, 50) : AppTheme.severityCritical,
         ),
       );
     }
