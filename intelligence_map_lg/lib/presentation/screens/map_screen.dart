@@ -9,6 +9,8 @@ import '../../logic/blocs/events/events_event.dart';
 import '../../logic/blocs/events/events_state.dart';
 import '../../services/ssh_service.dart';
 import '../../services/kml_service.dart';
+import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
+import '../widgets/cluster_badge.dart';
 
 
 class MapScreen extends StatefulWidget {
@@ -47,11 +49,21 @@ class _MapScreenState extends State<MapScreen> {
                     userAgentPackageName: 'com.liquidgalaxy.global_pulse',
                   ),
 
-                  // Event markers
-                  MarkerLayer(
-                    markers: state.filteredEvents
+                  // Event cluster markers
+                  MarkerClusterLayerWidget(
+                    options: MarkerClusterLayerOptions(
+                      maxClusterRadius: 80,
+                      size: const Size(60,60),
+                      markers: state.filteredEvents
+                        .where((event) => 
+                          event.latitude >= -90 && event.latitude <= 90 &&    // coordinates having longitude above 180 or -180 were giving error
+                          event.longitude >= -180 && event.longitude <= 180
+                        )
                         .map((event) => _buildMarker(event))
                         .toList(),
+                      builder: (context, markers) => ClusterBadge(count: markers.length),
+                    )   
+                    
                   ),
                 ],
               ),

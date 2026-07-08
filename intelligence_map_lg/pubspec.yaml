@@ -20,6 +20,7 @@ dependencies:
   # Map
   flutter_map: ^7.0.2
   latlong2: ^0.9.1
+  flutter_map_marker_cluster: ^1.4.0
 
   # Local Storage
   hive: ^2.2.3
