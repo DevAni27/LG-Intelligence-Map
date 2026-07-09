@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/models/global_event.dart';
+import 'severity_badge.dart';
 
 /// Displays a single [GlobalEvent] as a card in lists.
 /// Shows the category color bar, title, location, time, and severity badge.
@@ -89,7 +90,7 @@ class EventCard extends StatelessWidget {
             const SizedBox(width: 8),
 
             // Severity badge
-            _SeverityBadge(severity: event.severity),
+            SeverityBadge(severity: event.severity),
           ],
         ),
       ),
@@ -112,41 +113,3 @@ class EventCard extends StatelessWidget {
   }
 }
 
-class _SeverityBadge extends StatelessWidget {
-  final EventSeverity severity;
-
-  const _SeverityBadge({required this.severity});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: _badgeColor.withValues(alpha: 0.30),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        severity.label.toUpperCase(),
-        style: TextStyle(
-          color: const Color.fromARGB(255, 215, 215, 215),
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.5,
-        ),
-      ),
-    );
-  }
-
-  Color get _badgeColor {
-    switch (severity) {
-      case EventSeverity.critical:
-        return AppTheme.severityCritical;
-      case EventSeverity.high:
-        return AppTheme.severityHigh;
-      case EventSeverity.medium:
-        return AppTheme.severityMedium;
-      case EventSeverity.low:
-        return AppTheme.severityLow;
-    }
-  }
-}

@@ -11,6 +11,7 @@ import '../../services/ssh_service.dart';
 import '../../services/kml_service.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import '../widgets/cluster_badge.dart';
+import '../widgets/severity_badge.dart';
 
 
 class MapScreen extends StatefulWidget {
@@ -291,25 +292,56 @@ class _MapScreenState extends State<MapScreen> {
                 ),
               ),
               const SizedBox(height: 16),
+
               Text(
                 event.title,
                 style: Theme.of(context).textTheme.titleLarge,
               ),
+
+              const SizedBox(height: 10),
+
+              Row(
+                children: [
+                  Chip(
+                    label: Text(event.source.name.toUpperCase()),
+                    backgroundColor: AppTheme.surface,
+                    side: BorderSide(color: Colors.white.withValues(alpha: 0.4)),
+                    labelStyle: const TextStyle(fontSize: 12, color: Color.fromARGB(255, 238, 238, 238), fontWeight: FontWeight.bold),
+                    padding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  
+                  const Spacer(),
+
+                  SeverityBadge(severity: event.severity),
+
+
+                ],
+              ),
+
               const SizedBox(height: 8),
               Text(
                 event.description,
-                style: Theme.of(context).textTheme.bodyMedium,
+                style: const TextStyle(
+                        color: Color.fromARGB(255, 203, 203, 203),
+                      ),
               ),
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Icon(Icons.location_on, size: 16, color: AppTheme.textTertiary),
+                  Icon(Icons.location_on, size: 16, color: const Color.fromARGB(255, 255, 255, 255)),
                   const SizedBox(width: 4),
                   Text(event.locationName,
-                      style: Theme.of(context).textTheme.bodySmall),
+                      style: const TextStyle(
+                        color: Colors.white,
+                      ),
+                  ),
                   const Spacer(),
                   Text(event.timeAgo,
-                      style: Theme.of(context).textTheme.bodySmall),
+                      style: const TextStyle(
+                        color: Colors.white,
+                      ),
+                    ),
                 ],
               ),
               const SizedBox(height: 16),
