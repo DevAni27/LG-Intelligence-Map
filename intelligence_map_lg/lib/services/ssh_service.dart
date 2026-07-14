@@ -120,6 +120,31 @@ class SSHService {
     }
   }
 
+  int _getRightSlaveScreen(){
+    return (_numberOfRigs / 2).floor() + 1;
+  }
+
+  //method to send screen overlay to the right most screen in the rig
+
+  Future<bool> sendOverlayKML(String KmlContent) async {
+    final rightScreen = _getRightSlaveScreen();
+    final result = await execute("echo '$KmlContent' > /var/www/html/kml/slave_$rightScreen.kml");
+
+    return result != null;
+  }
+
+  //method to clear the screen overlay
+
+  Future<bool> clearoverlayKML(String KmlContent) async {
+    final rightScreen = _getRightSlaveScreen();
+
+    String kmlContent = KmlHelper.generateBlankKml('slave_$rightScreen');
+    final result = await execute("echo '$kmlContent' > /var/www/html/kml/slave_$rightScreen.kml");
+
+    return result != null;
+  }
+
+
   Future<bool> clearKML() async {
     if (_client == null) return false;
 
