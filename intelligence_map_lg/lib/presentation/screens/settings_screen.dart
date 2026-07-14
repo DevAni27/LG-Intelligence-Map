@@ -10,6 +10,7 @@ import '../../logic/blocs/events/events_event.dart';
 import '../../logic/blocs/events/events_state.dart';
 import '../../services/ssh_service.dart';
 
+
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
@@ -34,15 +35,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   void _loadSettings() {
     final box = Hive.box(AppConstants.settingsBox);
-    _ipController.text = box.get(AppConstants.keySSHHost, defaultValue: '');
-    _portController.text =
-        box.get(AppConstants.keySSHPort, defaultValue: '22');
-    _usernameController.text =
-        box.get(AppConstants.keySSHUser, defaultValue: 'lg');
-    _passwordController.text =
-        box.get(AppConstants.keySSHPassword, defaultValue: 'lg');
-    _numberOfRigs =
-        box.get(AppConstants.keyNumberOfRigs, defaultValue: 3);
+    setState(() {
+      _ipController.text = box.get(AppConstants.keySSHHost, defaultValue: '');
+      _portController.text = box.get(AppConstants.keySSHPort, defaultValue: '22');
+      _usernameController.text = box.get(AppConstants.keySSHUser, defaultValue: 'lg');
+      _passwordController.text = box.get(AppConstants.keySSHPassword, defaultValue: 'lg');
+      _numberOfRigs = box.get(AppConstants.keyNumberOfRigs, defaultValue: 3);
+    });
   }
 
   Future<void> _saveSettings() async {
@@ -325,6 +324,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
                 const Divider(height: 1),
+                
                 _buildCommandRow(
                   context,
                   'Clear Logo',

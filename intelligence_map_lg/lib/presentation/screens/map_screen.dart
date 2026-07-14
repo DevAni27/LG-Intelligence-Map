@@ -12,6 +12,7 @@ import '../../services/kml_service.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import '../widgets/cluster_badge.dart';
 import '../widgets/severity_badge.dart';
+import '../../services/overlay_service.dart';
 
 
 class MapScreen extends StatefulWidget {
@@ -348,18 +349,41 @@ class _MapScreenState extends State<MapScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: () {
+                  onPressed: () async {
                     final ssh = context.read<SSHService>();
-                    ssh.flyTo(
+
+                    final overlayKml = OverlayService.generateEventOverlayKml(event);
+
+                    await ssh.sendOverlayKML(overlayKml);
+
+                    await ssh.flyTo(
                       latitude: event.latitude,
                       longitude: event.longitude,
                       range: 500000,
                       tilt: 45,
                     );
-                    Navigator.pop(context);
+                    
                   },
                   icon: const Icon(Icons.send_rounded, size: 16),
                   label: const Text('Fly to on LG'),
+                ),
+              ),
+
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  style: ButtonStyle(backgroundColor: WidgetStateProperty.all(const Color.fromARGB(255, 209, 17, 3))),
+                  onPressed: () async {
+                    final ssh = context.read<SSHService>();
+
+                    final overlayKml = OverlayService.generateEventOverlayKml(event);
+
+                    await ssh.clearoverlayKML(overlayKml);
+                    
+                  },
+                  icon: const Icon(Icons.send_rounded, size: 16),
+                  label: const Text('Clear Overlay KML'),
                 ),
               ),
             ],
