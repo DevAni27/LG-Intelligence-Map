@@ -13,6 +13,7 @@ import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import '../widgets/cluster_badge.dart';
 import '../widgets/severity_badge.dart';
 import '../../services/overlay_service.dart';
+import '../widgets/category_legend.dart';
 
 
 class MapScreen extends StatefulWidget {
@@ -87,6 +88,9 @@ class _MapScreenState extends State<MapScreen> {
                     ),
                     const SizedBox(height: 12),
                     _buildCategoryFilters(context, state),
+                    const SizedBox(height: 12),
+
+                    const CategoryLegend(),
                   ],
                 ),
               ),
@@ -209,12 +213,14 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   Widget _buildFlyToButton(BuildContext context, EventsState state) {
+    final ssh = context.read<SSHService>();
+
     return ElevatedButton.icon(
-      onPressed: () => _sendToLG(context, state),
+      onPressed: () => ssh.isConnected ? _sendToLG(context, state) : null,
       icon: const Icon(Icons.send_rounded, size: 18),
-      label: const Text('Fly to View on LG'),
+      label: ssh.isConnected ? const Text('Fly to View on LG', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)) : const Text("Connect to LG First", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
       style: ElevatedButton.styleFrom(
-        backgroundColor: AppTheme.primary,
+        backgroundColor: ssh.isConnected ? AppTheme.primary : const Color.fromARGB(255, 96, 96, 96),
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(vertical: 16),
         shape: RoundedRectangleBorder(

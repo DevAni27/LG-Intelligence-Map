@@ -66,6 +66,15 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
 
+                //Daily Global Pulse Card
+
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                    child: _buildDailyPulseCard(context),
+                  ),
+                ),                
+
                 //Severity Breakdown card
                 SliverToBoxAdapter(
                   child: Padding(
@@ -86,13 +95,7 @@ class HomeScreen extends StatelessWidget {
                 ),
             
 
-                // ── Daily Global Pulse Card ─────────────────
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                    child: _buildDailyPulseCard(context),
-                  ),
-                ),
+                
 
                 // ── Recent Events Header ────────────────────
                 SliverToBoxAdapter(
