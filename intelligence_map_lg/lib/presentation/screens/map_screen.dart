@@ -13,6 +13,7 @@ import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import '../widgets/cluster_badge.dart';
 import '../widgets/severity_badge.dart';
 import '../../services/overlay_service.dart';
+import '../../core/utils/top_region_helper.dart';
 
 
 class MapScreen extends StatefulWidget {
@@ -242,6 +243,19 @@ class _MapScreenState extends State<MapScreen> {
     // Generate and send KML
     final kmlContent = kml.generateEventsKML(state.filteredEvents);
     final success = await ssh.sendKML(kmlContent);
+
+    final bounds = _mapController.camera.visibleBounds;
+    final visibleEvents = TopRegionHelper.getVisibleEvents(state.filteredEvents, bounds);
+
+    String overlayKML;
+
+    if(state.selectedEvent != null){   //to check if the user has selected an event or has selected a region
+      overlayKML = OverlayService.generateEventOverlayKml(state.selectedEvent!);  
+    } else{
+      overlayKML = OverlayService.generateRegionOverlayKML(visibleEvents); 
+    }
+
+    await ssh.sendOverlayKML(overlayKML);
     
 
     if (context.mounted) {
