@@ -1,4 +1,5 @@
 import '../data/models/global_event.dart';
+import '../core/utils/top_region_helper.dart';
 
 class OverlayService {
   static String generateEventOverlayKml(GlobalEvent event) {
@@ -103,6 +104,143 @@ class OverlayService {
     </Placemark>
   </Document>
 </kml>''';
+}
+
+  static String generateRegionOverlayKML(List<GlobalEvent> visibleEvents){
+    final dominant = TopRegionHelper.getDominantCategory(visibleEvents);
+    final imageURL = dominant != null ? _getHeaderImageURL(dominant) : 'https://images.unsplash.com/photo-1713098965471-d324f294a71d?q=80&w=2702&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D';
+
+    final categoryCount = TopRegionHelper.getCategoryCounts(visibleEvents);
+    final severityCount = TopRegionHelper.getSeverityCounts(visibleEvents);
+    final topEvent = TopRegionHelper.getTopEvent(visibleEvents);
+
+    final categoryRows = [
+    (EventCategory.earthquake,    'Earthquakes',    '#EF4444'),
+    (EventCategory.floodStorm,    'Floods / Storms','#3B82F6'),
+    (EventCategory.wildfire,      'Wildfires',      '#F97316'),
+    (EventCategory.diseaseOutbreak,'Disease',       '#A855F7'),
+    (EventCategory.conflict,      'Conflicts',      '#EAB308'),
+  ].map((row) {
+    final count = categoryCount[row.$1] ?? 0;
+    return '''
+      <tr>
+        <td style="padding: 6px 0;">
+          <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: ${row.$3}; margin-right: 8px;"></span>
+          <span style="color: #94a3b8; font-size: 13px;">${row.$2}</span>
+        </td>
+        <td style="padding: 6px 0; text-align: right; color: #ffffff; font-size: 13px; font-weight: bold;">$count</td>
+      </tr>''';
+  }).join('');
+
+  // Severity rows
+  final severityRows = [
+    (EventSeverity.critical, 'Critical', '#EF4444'),
+    (EventSeverity.high,     'High',     '#F97316'),
+    (EventSeverity.medium,   'Medium',   '#EAB308'),
+    (EventSeverity.low,      'Low',      '#22C55E'),
+  ].map((row) {
+    final count = severityCount[row.$1] ?? 0;
+    return '''
+      <tr>
+        <td style="padding: 6px 0;">
+          <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: ${row.$3}; margin-right: 8px;"></span>
+          <span style="color: #94a3b8; font-size: 13px;">${row.$2}</span>
+        </td>
+        <td style="padding: 6px 0; text-align: right; color: #ffffff; font-size: 13px; font-weight: bold;">$count</td>
+      </tr>''';
+  }).join('');
+
+  // Top event section
+  final topEventHtml = topEvent != null ? '''
+    <div style="background-color: #1e293b; border-radius: 8px; padding: 12px 14px; margin-bottom: 16px;">
+      <p style="color: #64748b; font-size: 11px; margin: 0 0 6px 0; letter-spacing: 1px;">TOP EVENT IN REGION</p>
+      <p style="color: #ffffff; font-size: 14px; font-weight: bold; margin: 0 0 6px 0;">${topEvent.title}</p>
+      <div style="display: flex; gap: 8px;">
+        <span style="background-color: ${_severityColorHex(topEvent.severity)}22; color: ${_severityColorHex(topEvent.severity)}; border: 1px solid ${_severityColorHex(topEvent.severity)}; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">
+          ${topEvent.severity.name.toUpperCase()}
+        </span>
+        <span style="color: #64748b; font-size: 12px; line-height: 20px;">${topEvent.locationName}</span>
+      </div>
+    </div>''' : '';
+
+  return '''<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2"
+     xmlns:gx="http://www.google.com/kml/ext/2.2">
+  <Document>
+    <Style id="region_style">
+      <BalloonStyle>
+        <bgColor>ff0f172a</bgColor>
+        <text><![CDATA[
+          <div style="font-family: Arial, sans-serif; width: 520px; background-color: #0f172a; color: #ffffff; border-radius: 12px; overflow: hidden;">
+
+            <!-- Header Image -->
+            <div style="width: 100%; height: 160px; overflow: hidden; position: relative;">
+              <img src="$imageURL" style="width: 100%; height: 160px; object-fit: cover;" />
+              <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, #0f172a); height: 60px;"></div>
+            </div>
+
+            <!-- Title -->
+            <div style="padding: 14px 20px 4px 20px;">
+              <p style="color: #64748b; font-size: 11px; margin: 0 0 4px 0; letter-spacing: 1px;">REGION OVERVIEW</p>
+              <h2 style="color: #ffffff; font-size: 20px; margin: 0 0 4px 0;">Current Map View</h2>
+              <p style="color: #94a3b8; font-size: 13px; margin: 0;">${visibleEvents.length} active events in this area</p>
+            </div>
+
+            <!-- Divider -->
+            <div style="border-top: 1px solid #1e293b; margin: 12px 20px;"></div>
+
+            <!-- Top Event -->
+            <div style="padding: 0 20px;">
+              $topEventHtml
+            </div>
+
+            <!-- Event Breakdown -->
+            <div style="padding: 0 20px 12px 20px;">
+              <p style="color: #64748b; font-size: 11px; margin: 0 0 8px 0; letter-spacing: 1px;">EVENT BREAKDOWN</p>
+              <table style="width: 100%; border-collapse: collapse;">
+                $categoryRows
+              </table>
+            </div>
+
+            <!-- Divider -->
+            <div style="border-top: 1px solid #1e293b; margin: 0 20px 12px 20px;"></div>
+
+            <!-- Severity Breakdown -->
+            <div style="padding: 0 20px 12px 20px;">
+              <p style="color: #64748b; font-size: 11px; margin: 0 0 8px 0; letter-spacing: 1px;">SEVERITY BREAKDOWN</p>
+              <table style="width: 100%; border-collapse: collapse;">
+                $severityRows
+              </table>
+            </div>
+
+            <!-- Divider -->
+            <div style="border-top: 1px solid #1e293b; margin: 0 20px 12px 20px;"></div>
+
+            <!-- AI Summary Placeholder -->
+            <div style="padding: 0 20px 16px 20px;">
+              <p style="color: #64748b; font-size: 11px; margin: 0 0 8px 0; letter-spacing: 1px;">AI REGIONAL SUMMARY</p>
+              <div style="background-color: #1e293b; border-radius: 8px; padding: 12px 14px; border-left: 3px solid #06b6d4;">
+                <p style="color: #475569; font-size: 13px; font-style: italic; margin: 0;">
+                  AI-powered regional analysis coming in Phase 4. Gemini will generate a natural language summary of events, patterns, and risks in this region.
+                </p>
+              </div>
+            </div>
+
+          </div>
+        ]]></text>
+      </BalloonStyle>
+    </Style>
+
+    <Placemark>
+      <styleUrl>#region_style</styleUrl>
+      <gx:balloonVisibility>1</gx:balloonVisibility>
+      <Point>
+        <coordinates>0,0,0</coordinates>
+      </Point>
+    </Placemark>
+  </Document>
+</kml>''';
+
 }
 
   static String _getHeaderImageURL(EventCategory category){
