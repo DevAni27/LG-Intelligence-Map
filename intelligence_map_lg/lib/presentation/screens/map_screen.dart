@@ -15,7 +15,9 @@ import '../widgets/severity_badge.dart';
 import '../../services/overlay_service.dart';
 import '../../core/utils/top_region_helper.dart';
 import '../widgets/category_legend.dart';
-
+import '../../services/tts_service.dart';
+import '../../core/constants/app_constants.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -26,6 +28,7 @@ class MapScreen extends StatefulWidget {
 
 class _MapScreenState extends State<MapScreen> {
   final MapController _mapController = MapController();
+  GlobalEvent? _lastTappedEvent;
 
   @override
   Widget build(BuildContext context) {
@@ -120,6 +123,7 @@ class _MapScreenState extends State<MapScreen> {
       height: size,
       child: GestureDetector(
         onTap: () {
+          setState(() => _lastTappedEvent = event);
           context.read<EventsBloc>().add(SelectEvent(event));
           _showEventDetail(context, event);
         },
@@ -235,6 +239,13 @@ class _MapScreenState extends State<MapScreen> {
   Future<void> _sendToLG(BuildContext context, EventsState state) async {
     final ssh = context.read<SSHService>();
     final kml = context.read<KMLService>();
+    final tts = context.read<TTSService>();
+
+    final selectedEvent = _lastTappedEvent;
+    
+
+    setState(() => _lastTappedEvent = null);
+    
 
     if (!ssh.isConnected) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -255,13 +266,32 @@ class _MapScreenState extends State<MapScreen> {
 
     String overlayKML;
 
-    if(state.selectedEvent != null){   //to check if the user has selected an event or has selected a region
-      overlayKML = OverlayService.generateEventOverlayKml(state.selectedEvent!);  
+    
+    
+
+    if(selectedEvent != null){  
+       //to check if the user has selected an event or has selected a region
+      overlayKML = OverlayService.generateEventOverlayKml(selectedEvent);
+
     } else{
+      
       overlayKML = OverlayService.generateRegionOverlayKML(visibleEvents); 
     }
 
+
     await ssh.sendOverlayKML(overlayKML);
+
+    // Read TTS setting from Hive
+    final box = Hive.box(AppConstants.settingsBox);
+    final ttsEnabled = box.get(AppConstants.keyTTSEnabled, defaultValue: true);
+
+    if (ttsEnabled) {
+      if (selectedEvent != null) {
+        tts.speakEventSummary(selectedEvent);
+      } else {
+        tts.speakRegionSummary(visibleEvents);
+      }
+    }
     
 
     if (context.mounted) {
@@ -286,6 +316,8 @@ class _MapScreenState extends State<MapScreen> {
       longitude: center.longitude,
       range: _zoomToRange(_mapController.camera.zoom),
     );
+
+    
   }
 
   void _showEventDetail(BuildContext context, GlobalEvent event) {
@@ -382,6 +414,13 @@ class _MapScreenState extends State<MapScreen> {
                       range: 500000,
                       tilt: 45,
                     );
+
+                    final box = Hive.box(AppConstants.settingsBox);
+                    final ttsEnabled = box.get(AppConstants.keyTTSEnabled, defaultValue: true);
+                    if (ttsEnabled && context.mounted) {
+                      final tts = context.read<TTSService>();
+                      tts.speakEventSummary(event);
+                    }
                     
                   },
                   icon: const Icon(Icons.send_rounded, size: 16),

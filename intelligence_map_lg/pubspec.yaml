@@ -10,6 +10,8 @@ dependencies:
   flutter:
     sdk: flutter
 
+  flutter_tts: ^4.0.2
+
   # State Management
   flutter_bloc: ^9.1.0
   equatable: ^2.0.7

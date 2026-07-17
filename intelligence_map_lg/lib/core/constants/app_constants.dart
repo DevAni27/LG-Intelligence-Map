@@ -36,6 +36,7 @@ class AppConstants {
   static const String keyNumberOfRigs = 'number_of_rigs';
   static const String keyGeminiApiKey = 'gemini_api_key';
   static const String keyLanguage = 'language';
+  static const String keyTTSEnabled = 'tts_enabled';
 }
 
 class ApiEndpoints {
