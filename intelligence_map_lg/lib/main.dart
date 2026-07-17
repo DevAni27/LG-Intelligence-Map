@@ -8,6 +8,7 @@ import 'logic/blocs/events/events_bloc.dart';
 import 'logic/blocs/events/events_event.dart';
 import 'services/ssh_service.dart';
 import 'services/kml_service.dart';
+import 'services/tts_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,6 +29,7 @@ void main() async {
   final sshService = SSHService();
   final kmlService = KMLService();
   final eventRepository = EventRepository();
+  final ttsService = TTSService();
 
   runApp(
     MultiRepositoryProvider(
@@ -35,6 +37,7 @@ void main() async {
         RepositoryProvider.value(value: sshService),
         RepositoryProvider.value(value: kmlService),
         RepositoryProvider.value(value: eventRepository),
+        RepositoryProvider.value(value: ttsService),
       ],
       child: MultiBlocProvider(
         providers: [

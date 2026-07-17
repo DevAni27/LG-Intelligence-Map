@@ -26,6 +26,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   int _numberOfRigs = 3;
   bool _isConnecting = false;
   bool _isConnected = false;
+  bool _ttsEnabled = true;
 
   @override
   void initState() {
@@ -51,6 +52,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await box.put(AppConstants.keySSHUser, _usernameController.text);
     await box.put(AppConstants.keySSHPassword, _passwordController.text);
     await box.put(AppConstants.keyNumberOfRigs, _numberOfRigs);
+    await box.put(AppConstants.keyTTSEnabled, _ttsEnabled);
   }
 
   Future<void> _connect() async {
@@ -303,6 +305,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 24),
 
+          _buildSectionHeader(context, icon: Icons.volume_up, title: 'Voice'),
+          const SizedBox(height: 12),
+            _buildCard(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Text to Speech'),
+                      Text('Read overlay content aloud', 
+                        style: TextStyle(color: AppTheme.textTertiary, fontSize: 14, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  Switch(
+                    value: _ttsEnabled,
+                    onChanged: (value) async {
+                      setState(() => _ttsEnabled = value);
+                      await _saveSettings();
+                    },
+                    activeThumbColor: AppTheme.primary,
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
           // ── LG Quick Commands ─────────────────────────
           _buildSectionHeader(
             context,
@@ -365,6 +395,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           const SizedBox(height: 40),
+          
         ],
       ),
     );
