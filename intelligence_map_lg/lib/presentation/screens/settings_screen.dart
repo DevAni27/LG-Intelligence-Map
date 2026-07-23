@@ -28,6 +28,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _isConnected = false;
   bool _ttsEnabled = true;
 
+  final _geminiApiKeyController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
@@ -42,6 +44,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _usernameController.text = box.get(AppConstants.keySSHUser, defaultValue: 'lg');
       _passwordController.text = box.get(AppConstants.keySSHPassword, defaultValue: 'lg');
       _numberOfRigs = box.get(AppConstants.keyNumberOfRigs, defaultValue: 3);
+      _geminiApiKeyController.text = box.get(AppConstants.keyGeminiApiKey, defaultValue: '');
     });
   }
 
@@ -53,6 +56,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await box.put(AppConstants.keySSHPassword, _passwordController.text);
     await box.put(AppConstants.keyNumberOfRigs, _numberOfRigs);
     await box.put(AppConstants.keyTTSEnabled, _ttsEnabled);
+    await box.put(AppConstants.keyGeminiApiKey, _geminiApiKeyController.text);
   }
 
   Future<void> _connect() async {
