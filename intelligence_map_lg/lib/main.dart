@@ -9,6 +9,8 @@ import 'logic/blocs/events/events_event.dart';
 import 'services/ssh_service.dart';
 import 'services/kml_service.dart';
 import 'services/tts_service.dart';
+import 'package:provider/provider.dart';
+import 'services/gemma_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,12 +34,16 @@ void main() async {
   final ttsService = TTSService();
 
   runApp(
-    MultiRepositoryProvider(
+  MultiProvider(
+    providers: [
+      ChangeNotifierProvider<SSHService>(create: (_) => sshService),
+      Provider<KMLService>(create: (_) => kmlService),
+      Provider<TTSService>(create: (_) => ttsService),
+      Provider<GemmaService>(create: (_) => GemmaService()),
+    ],
+    child: MultiRepositoryProvider(
       providers: [
-        RepositoryProvider.value(value: sshService),
-        RepositoryProvider.value(value: kmlService),
         RepositoryProvider.value(value: eventRepository),
-        RepositoryProvider.value(value: ttsService),
       ],
       child: MultiBlocProvider(
         providers: [
@@ -50,5 +56,6 @@ void main() async {
         child: const WorldIntelligenceMapApp(),
       ),
     ),
-  );
+  ),
+);
 }

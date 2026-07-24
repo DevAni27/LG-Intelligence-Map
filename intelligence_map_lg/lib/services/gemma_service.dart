@@ -3,21 +3,52 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../core/constants/app_constants.dart';
 import '../data/models/global_event.dart';
 import '../core/utils/top_region_helper.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
-class GeminiService{
-  //method to get the gemini model
-  GenerativeModel? _getmodel(){
-    final apiKey = AppConstants.keyGeminiApiKey;
+class GemmaService{
+  //method to get the gemma model
 
-    if (apiKey == null) {
-      return null;
-    }
-    else{
-      final model = GenerativeModel(model: 'gemini-2.5-flash', apiKey: apiKey);
-      return model;
-    }
-    
+  String? _getApiKey() {
+  final box = Hive.box(AppConstants.settingsBox);
+  final key = box.get(AppConstants.keyOpenRouterApiKey, defaultValue: '');
+  if (key == null || key.isEmpty) return null;
+  return key.trim();
+}
+  
+  Future<String> _callGemma(String prompt) async {
+  final apiKey = _getApiKey();
+  if (apiKey == null) {
+    return 'Please add your OpenRouter API key in Settings to use AI features.';
   }
+
+  try {
+    final response = await http.post(
+      Uri.parse('https://openrouter.ai/api/v1/chat/completions'),
+      headers: {
+        'Authorization': 'Bearer $apiKey',
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://liquidgalaxy.eu',
+        'X-Title': 'Global Pulse',
+      },
+      body: jsonEncode({
+        'model': 'google/gemma-4-26b-a4b-it:free',
+        'messages': [
+          {'role': 'user', 'content': prompt}
+        ],
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['choices'][0]['message']['content'] ?? 'No response received.';
+    } else {
+      return 'Error ${response.statusCode}: ${response.body}';
+    }
+  } catch (e) {
+    return 'Failed to get response: ${e.toString()}';
+  }
+}
 
   //ask a question method(ask ai screen)
 
@@ -40,16 +71,12 @@ class GeminiService{
   }
   
   Future<String> askQuestion(String question, List<GlobalEvent> events) async {
-    final model = _getmodel();
 
-    if(model == null){
-      return "Please add your Gemini API key in Settings to use AI features.";
-    }
     
     try{
       final prompt = _buildAskPrompt(question, events);
-      final response = await model.generateContent([Content.text(prompt)]);
-      return response.text ?? 'No response received. Please try again.';
+      final response = await _callGemma(prompt);
+      return response;
     }catch(e){
       return 'Failed to get response: ${e.toString()}';
     }  
@@ -86,17 +113,11 @@ class GeminiService{
     if (visibleEvents.isEmpty) {
       return 'No active events detected in this region.';
     }
-
-    final model = _getmodel();
-
-    if(model == null){
-      return "Please add your Gemini API key in Settings to use AI features.";
-    }
     
     try{
       final prompt = _buildRegionPrompt(visibleEvents);
-      final response = await model.generateContent([Content.text(prompt)]);
-      return response.text ?? 'No response received. Please try again.';
+      final response = await _callGemma(prompt);
+      return response;
     }catch(e){
       return 'Failed to get response: ${e.toString()}';
     }
@@ -122,16 +143,11 @@ class GeminiService{
   }
 
   Future<String> eventExplain(GlobalEvent event) async {
-    final model = _getmodel();
-    
-    if(model == null){
-      return "Please add your Gemini API key in Settings to use AI features.";
-    }
 
     try{
       final prompt = _buildEventPrompt(event);
-      final response = await model.generateContent([Content.text(prompt)]);
-      return response.text ?? 'No response received. Please try again.';
+      final response = await _callGemma(prompt);
+      return response;
     }catch(e){
       return 'Failed to get response: ${e.toString()}';
     }
@@ -156,12 +172,12 @@ class GeminiService{
   return '''You are Global Pulse, a real-time world event assistant.
 
 Last 24 hours overview:
-- Total events: ${eventList}
-- Most affected event type: ${dominant}
-- Most critical event: ${topEvent}
+- Total events: $eventList
+- Most affected event type: $dominant
+- Most critical event: $topEvent
 
 Urgent events:
-${urgentEvents}
+$urgentEvents
 
 Rules:
 - Write a 120-150 word spoken briefing like a news anchor
@@ -179,19 +195,45 @@ Rules:
     if (recentEvents.isEmpty) {
       return 'No significant events recorded in the last 24 hours.';
     }
-    
-    final model = _getmodel();
-    
-    if(model == null){
-      return "Please add your Gemini API key in Settings to use AI features.";
-    }
 
     try{
       final prompt = _buildDailyPulsePrompt(recentEvents);
-      final response = await model.generateContent([Content.text(prompt)]);
-      return response.text ?? 'No response received. Please try again.';
+      final response = await _callGemma(prompt);
+      return response;
     }catch(e){
       return 'Failed to get response: ${e.toString()}';
     }
   }
+
+  FlyToSuggestion? parseFlyTo(String response){
+    final word = "FLYTO:";
+    final check = response.contains(word);
+
+    if(!check){
+      return null;
+    }
+    List<String> lines = response.split('\n');
+    final flytoLine = lines.firstWhere((line) => line.startsWith(word));
+    String result = flytoLine.replaceAll(word, "").replaceAll("  ", " ").trim();
+
+    List<String> info = result.split("|");
+
+    if (info.length != 3) return null;
+
+    final locName = info[0].trim();
+    final lat = double.tryParse(info[1].trim());
+    final lon = double.tryParse(info[2].trim());
+    if (lat == null || lon == null) return null;
+
+    return FlyToSuggestion(locationName: locName, latitude: lat, longitude: lon);
+
+  }
+}
+
+class FlyToSuggestion{
+  final String locationName;
+  final double latitude;
+  final double longitude;
+
+  const FlyToSuggestion({required this.locationName, required this.latitude, required this.longitude});
 }

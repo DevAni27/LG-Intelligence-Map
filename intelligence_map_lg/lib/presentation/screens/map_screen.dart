@@ -18,6 +18,7 @@ import '../widgets/category_legend.dart';
 import '../../services/tts_service.dart';
 import '../../core/constants/app_constants.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import '../../services/gemma_service.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -28,7 +29,6 @@ class MapScreen extends StatefulWidget {
 
 class _MapScreenState extends State<MapScreen> {
   final MapController _mapController = MapController();
-  GlobalEvent? _lastTappedEvent;
 
   @override
   Widget build(BuildContext context) {
@@ -60,17 +60,21 @@ class _MapScreenState extends State<MapScreen> {
                   MarkerClusterLayerWidget(
                     options: MarkerClusterLayerOptions(
                       maxClusterRadius: 80,
-                      size: const Size(60,60),
+                      size: const Size(60, 60),
                       markers: state.filteredEvents
-                        .where((event) => 
-                          event.latitude >= -90 && event.latitude <= 90 &&    // coordinates having longitude above 180 or -180 were giving error
-                          event.longitude >= -180 && event.longitude <= 180
-                        )
-                        .map((event) => _buildMarker(event))
-                        .toList(),
-                      builder: (context, markers) => ClusterBadge(count: markers.length),
-                    )   
-                    
+                          .where(
+                            (event) =>
+                                event.latitude >= -90 &&
+                                event.latitude <=
+                                    90 && // coordinates having longitude above 180 or -180 were giving error
+                                event.longitude >= -180 &&
+                                event.longitude <= 180,
+                          )
+                          .map((event) => _buildMarker(event))
+                          .toList(),
+                      builder: (context, markers) =>
+                          ClusterBadge(count: markers.length),
+                    ),
                   ),
                 ],
               ),
@@ -85,10 +89,8 @@ class _MapScreenState extends State<MapScreen> {
                   children: [
                     Text(
                       'Global Event Map',
-                      style:
-                          Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ),
+                      style: Theme.of(context).textTheme.headlineMedium
+                          ?.copyWith(fontWeight: FontWeight.w700),
                     ),
                     const SizedBox(height: 12),
                     _buildCategoryFilters(context, state),
@@ -123,7 +125,6 @@ class _MapScreenState extends State<MapScreen> {
       height: size,
       child: GestureDetector(
         onTap: () {
-          setState(() => _lastTappedEvent = event);
           context.read<EventsBloc>().add(SelectEvent(event));
           _showEventDetail(context, event);
         },
@@ -144,10 +145,7 @@ class _MapScreenState extends State<MapScreen> {
             child: Container(
               width: size * 0.4,
               height: size * 0.4,
-              decoration: BoxDecoration(
-                color: color,
-                shape: BoxShape.circle,
-              ),
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
             ),
           ),
         ),
@@ -182,20 +180,17 @@ class _MapScreenState extends State<MapScreen> {
               onSelected: (selected) {
                 if (category == null) {
                   // "All" selected — clear filters
-                  context
-                      .read<EventsBloc>()
-                      .add(const FilterByCategory({}));
+                  context.read<EventsBloc>().add(const FilterByCategory({}));
                 } else {
-                  final updated =
-                      Set<EventCategory>.from(state.activeCategories);
+                  final updated = Set<EventCategory>.from(
+                    state.activeCategories,
+                  );
                   if (selected) {
                     updated.add(category);
                   } else {
                     updated.remove(category);
                   }
-                  context
-                      .read<EventsBloc>()
-                      .add(FilterByCategory(updated));
+                  context.read<EventsBloc>().add(FilterByCategory(updated));
                 }
               },
               selectedColor: AppTheme.primary.withValues(alpha: 0.2),
@@ -218,19 +213,27 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   Widget _buildFlyToButton(BuildContext context, EventsState state) {
-    final ssh = context.read<SSHService>();
+    final ssh = context.watch<SSHService>();
 
     return ElevatedButton.icon(
       onPressed: () => ssh.isConnected ? _sendToLG(context, state) : null,
       icon: const Icon(Icons.send_rounded, size: 18),
-      label: ssh.isConnected ? const Text('Fly to View on LG', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)) : const Text("Connect to LG First", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+      label: ssh.isConnected
+          ? const Text(
+              'Fly to View on LG',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            )
+          : const Text(
+              "Connect to LG First",
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
       style: ElevatedButton.styleFrom(
-        backgroundColor: ssh.isConnected ? AppTheme.primary : const Color.fromARGB(255, 96, 96, 96),
+        backgroundColor: ssh.isConnected
+            ? AppTheme.primary
+            : const Color.fromARGB(255, 96, 96, 96),
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(vertical: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
     );
   }
@@ -240,12 +243,6 @@ class _MapScreenState extends State<MapScreen> {
     final ssh = context.read<SSHService>();
     final kml = context.read<KMLService>();
     final tts = context.read<TTSService>();
-
-    final selectedEvent = _lastTappedEvent;
-    
-
-    setState(() => _lastTappedEvent = null);
-    
 
     if (!ssh.isConnected) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -262,22 +259,18 @@ class _MapScreenState extends State<MapScreen> {
     final success = await ssh.sendKML(kmlContent);
 
     final bounds = _mapController.camera.visibleBounds;
-    final visibleEvents = TopRegionHelper.getVisibleEvents(state.filteredEvents, bounds);
+    final visibleEvents = TopRegionHelper.getVisibleEvents(
+      state.filteredEvents,
+      bounds,
+    );
 
     String overlayKML;
 
-    
-    
-
-    if(selectedEvent != null){  
-       //to check if the user has selected an event or has selected a region
-      overlayKML = OverlayService.generateEventOverlayKml(selectedEvent);
-
-    } else{
-      
-      overlayKML = OverlayService.generateRegionOverlayKML(visibleEvents); 
-    }
-
+    final gemini = context.read<GemmaService>();
+    overlayKML = await OverlayService.generateRegionOverlayKML(
+      visibleEvents,
+      gemini,
+    );
 
     await ssh.sendOverlayKML(overlayKML);
 
@@ -286,13 +279,8 @@ class _MapScreenState extends State<MapScreen> {
     final ttsEnabled = box.get(AppConstants.keyTTSEnabled, defaultValue: true);
 
     if (ttsEnabled) {
-      if (selectedEvent != null) {
-        tts.speakEventSummary(selectedEvent);
-      } else {
-        tts.speakRegionSummary(visibleEvents);
-      }
+      tts.speakRegionSummary(visibleEvents);
     }
-    
 
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -301,10 +289,11 @@ class _MapScreenState extends State<MapScreen> {
             success
                 ? 'Flying to the location!'
                 : 'Failed to fly to the location.',
-                style: const TextStyle(color: Colors.white),
+            style: const TextStyle(color: Colors.white),
           ),
-          backgroundColor:
-              success ? const Color.fromARGB(255, 12, 109, 50) : AppTheme.severityCritical,
+          backgroundColor: success
+              ? const Color.fromARGB(255, 12, 109, 50)
+              : AppTheme.severityCritical,
         ),
       );
     }
@@ -316,8 +305,6 @@ class _MapScreenState extends State<MapScreen> {
       longitude: center.longitude,
       range: _zoomToRange(_mapController.camera.zoom),
     );
-
-    
   }
 
   void _showEventDetail(BuildContext context, GlobalEvent event) {
@@ -346,10 +333,7 @@ class _MapScreenState extends State<MapScreen> {
               ),
               const SizedBox(height: 16),
 
-              Text(
-                event.title,
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
+              Text(event.title, style: Theme.of(context).textTheme.titleLarge),
 
               const SizedBox(height: 10),
 
@@ -358,17 +342,21 @@ class _MapScreenState extends State<MapScreen> {
                   Chip(
                     label: Text(event.source.name.toUpperCase()),
                     backgroundColor: AppTheme.surface,
-                    side: BorderSide(color: Colors.white.withValues(alpha: 0.4)),
-                    labelStyle: const TextStyle(fontSize: 12, color: Color.fromARGB(255, 238, 238, 238), fontWeight: FontWeight.bold),
+                    side: BorderSide(
+                      color: Colors.white.withValues(alpha: 0.4),
+                    ),
+                    labelStyle: const TextStyle(
+                      fontSize: 12,
+                      color: Color.fromARGB(255, 238, 238, 238),
+                      fontWeight: FontWeight.bold,
+                    ),
                     padding: EdgeInsets.zero,
                     visualDensity: VisualDensity.compact,
                   ),
-                  
+
                   const Spacer(),
 
                   SeverityBadge(severity: event.severity),
-
-
                 ],
               ),
 
@@ -376,25 +364,27 @@ class _MapScreenState extends State<MapScreen> {
               Text(
                 event.description,
                 style: const TextStyle(
-                        color: Color.fromARGB(255, 203, 203, 203),
-                      ),
+                  color: Color.fromARGB(255, 203, 203, 203),
+                ),
               ),
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Icon(Icons.location_on, size: 16, color: const Color.fromARGB(255, 255, 255, 255)),
+                  Icon(
+                    Icons.location_on,
+                    size: 16,
+                    color: const Color.fromARGB(255, 255, 255, 255),
+                  ),
                   const SizedBox(width: 4),
-                  Text(event.locationName,
-                      style: const TextStyle(
-                        color: Colors.white,
-                      ),
+                  Text(
+                    event.locationName,
+                    style: const TextStyle(color: Colors.white),
                   ),
                   const Spacer(),
-                  Text(event.timeAgo,
-                      style: const TextStyle(
-                        color: Colors.white,
-                      ),
-                    ),
+                  Text(
+                    event.timeAgo,
+                    style: const TextStyle(color: Colors.white),
+                  ),
                 ],
               ),
               const SizedBox(height: 16),
@@ -404,7 +394,9 @@ class _MapScreenState extends State<MapScreen> {
                   onPressed: () async {
                     final ssh = context.read<SSHService>();
 
-                    final overlayKml = OverlayService.generateEventOverlayKml(event);
+                    final overlayKml = OverlayService.generateEventOverlayKml(
+                      event,
+                    );
 
                     await ssh.sendOverlayKML(overlayKml);
 
@@ -416,12 +408,14 @@ class _MapScreenState extends State<MapScreen> {
                     );
 
                     final box = Hive.box(AppConstants.settingsBox);
-                    final ttsEnabled = box.get(AppConstants.keyTTSEnabled, defaultValue: true);
+                    final ttsEnabled = box.get(
+                      AppConstants.keyTTSEnabled,
+                      defaultValue: true,
+                    );
                     if (ttsEnabled && context.mounted) {
                       final tts = context.read<TTSService>();
                       tts.speakEventSummary(event);
                     }
-                    
                   },
                   icon: const Icon(Icons.send_rounded, size: 16),
                   label: const Text('Fly to on LG'),
@@ -432,14 +426,19 @@ class _MapScreenState extends State<MapScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  style: ButtonStyle(backgroundColor: WidgetStateProperty.all(const Color.fromARGB(255, 209, 17, 3))),
+                  style: ButtonStyle(
+                    backgroundColor: WidgetStateProperty.all(
+                      const Color.fromARGB(255, 209, 17, 3),
+                    ),
+                  ),
                   onPressed: () async {
                     final ssh = context.read<SSHService>();
 
-                    final overlayKml = OverlayService.generateEventOverlayKml(event);
+                    final overlayKml = OverlayService.generateEventOverlayKml(
+                      event,
+                    );
 
                     await ssh.clearoverlayKML(overlayKml);
-                    
                   },
                   icon: const Icon(Icons.send_rounded, size: 16),
                   label: const Text('Clear Overlay KML'),

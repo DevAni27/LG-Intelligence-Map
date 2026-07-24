@@ -1,12 +1,12 @@
 import 'package:dartssh2/dartssh2.dart';
-import 'dart:typed_data';
 import 'dart:convert';
 import '../helpers/kml_helper.dart';
-import 'dart:async'; 
+import 'dart:async';
+import 'package:flutter/foundation.dart';
 
 /// Manages SSH connections to the Liquid Galaxy master node.
 /// Patterns matched from production LG app store applications.
-class SSHService {
+class SSHService extends ChangeNotifier {
   SSHClient? _client;
   String? _host;
   int _port = 22;
@@ -44,10 +44,9 @@ class SSHService {
         username: username,
         onPasswordRequest: () => password,
       );
-     
 
+      notifyListeners();
       await sendLogo();
-      
 
       return true;
     } catch (e) {
@@ -59,6 +58,7 @@ class SSHService {
   void disconnect() {
     _client?.close();
     _client = null;
+    notifyListeners();
   }
 
   Future<bool> reconnect() async {
@@ -92,15 +92,19 @@ class SSHService {
   /// Sends KML to the LG rig.
   /// ONLY writes to the KML file and kmls.txt.
   /// NEVER write to master.kml — sync_nlc.php handles loading on all screens.
-  Future<bool> sendKML(String kmlContent, {String fileName = 'global_pulse.kml'}) async {
+  Future<bool> sendKML(
+    String kmlContent, {
+    String fileName = 'global_pulse.kml',
+  }) async {
     if (_client == null || _host == null) return false;
 
     try {
-      // 1. Upload file to /var/www/html/ 
+      // 1. Upload file to /var/www/html/
       final sftp = await _client!.sftp();
       final file = await sftp.open(
         '/var/www/html/$fileName',
-        mode: SftpFileOpenMode.create |
+        mode:
+            SftpFileOpenMode.create |
             SftpFileOpenMode.truncate |
             SftpFileOpenMode.write,
       );
@@ -109,10 +113,8 @@ class SSHService {
       );
       await file.close();
 
-      // 2. Write URL to kmls.txt 
+      // 2. Write URL to kmls.txt
       await execute('echo "http://lg1:81/$fileName" > /var/www/html/kmls.txt');
-
-      
 
       return true;
     } catch (e) {
@@ -120,17 +122,34 @@ class SSHService {
     }
   }
 
-  int _getRightSlaveScreen(){
+  int _getRightSlaveScreen() {
     return (_numberOfRigs / 2).floor() + 1;
   }
 
   //method to send screen overlay to the right most screen in the rig
 
-  Future<bool> sendOverlayKML(String KmlContent) async {
-    final rightScreen = _getRightSlaveScreen();
-    final result = await execute("echo '$KmlContent' > /var/www/html/kml/slave_$rightScreen.kml");
+  Future<bool> sendOverlayKML(String kmlContent) async {
+    try {
+      final rightScreen = _getRightSlaveScreen();
+      final fileName = 'slave_$rightScreen.kml';
+      final remotePath = '/var/www/html/kml/$fileName';
 
-    return result != null;
+      // Use SFTP to upload — handles newlines and special chars correctly
+      final sftp = await _client!.sftp();
+      final file = await sftp.open(
+        remotePath,
+        mode:
+            SftpFileOpenMode.create |
+            SftpFileOpenMode.truncate |
+            SftpFileOpenMode.write,
+      );
+      await file.writeBytes(utf8.encode(kmlContent));
+      await file.close();
+      return true;
+    } catch (e) {
+      debugPrint('sendOverlayKML error: $e');
+      return false;
+    }
   }
 
   //method to clear the screen overlay
@@ -139,17 +158,17 @@ class SSHService {
     final rightScreen = _getRightSlaveScreen();
 
     String kmlContent = KmlHelper.generateBlankKml('slave_$rightScreen');
-    final result = await execute("echo '$kmlContent' > /var/www/html/kml/slave_$rightScreen.kml");
+    final result = await execute(
+      "echo '$kmlContent' > /var/www/html/kml/slave_$rightScreen.kml",
+    );
 
     return result != null;
   }
-
 
   Future<bool> clearKML() async {
     if (_client == null) return false;
 
     try {
-      
       await execute('echo "" > /var/www/html/kmls.txt');
       await execute('echo "" > /tmp/query.txt');
       await execute('rm -f /var/www/html/global_pulse.kml');
@@ -159,7 +178,7 @@ class SSHService {
     }
   }
 
-  // SLAVE REFRESH 
+  // SLAVE REFRESH
 
   /// Sets refresh interval on a slave's myplaces.kml so Google Earth
   /// periodically re-reads slave_X.kml. Idempotent: removes existing
@@ -210,7 +229,8 @@ class SSHService {
 
     try {
       final leftScreen = (_numberOfRigs / 2).floor() + 2;
-      const emptyKml = '<?xml version="1.0" encoding="UTF-8"?>'
+      const emptyKml =
+          '<?xml version="1.0" encoding="UTF-8"?>'
           '<kml xmlns="http://www.opengis.net/kml/2.2">'
           '<Document><name>Empty</name></Document></kml>';
 
@@ -235,7 +255,8 @@ class SSHService {
     double tilt = 0,
     double range = 1500000,
   }) async {
-    final lookAt = 'flytoview=<LookAt><longitude>$longitude</longitude>'
+    final lookAt =
+        'flytoview=<LookAt><longitude>$longitude</longitude>'
         '<latitude>$latitude</latitude><altitude>$altitude</altitude>'
         '<heading>$heading</heading><tilt>$tilt</tilt>'
         '<range>$range</range>'
@@ -243,7 +264,6 @@ class SSHService {
 
     return await execute("echo '$lookAt' > /tmp/query.txt") != null;
   }
-  
 
   /// Reboots the entire LG rig.
   /// Uses sshpass + ssh -t pattern from production app.
@@ -289,7 +309,8 @@ class SSHService {
     if (_client == null) return false;
 
     try {
-      final cmd = """
+      final cmd =
+          """
         RELAUNCH_CMD="\\
         if [ -f /etc/init/lxdm.conf ]; then
           export SERVICE=lxdm
@@ -306,13 +327,10 @@ class SSHService {
         fi
         " && sshpass -p $_password ssh -x -t lg@lg1 "\$RELAUNCH_CMD\"""";
 
-
       await execute(cmd);
       return true;
     } catch (e) {
       return false;
     }
   }
-
-  
 }
