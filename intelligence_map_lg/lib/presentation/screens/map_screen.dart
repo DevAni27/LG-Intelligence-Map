@@ -19,6 +19,7 @@ import '../../services/tts_service.dart';
 import '../../core/constants/app_constants.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../../services/gemma_service.dart';
+import '../widgets/event_detail_sheet.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -311,143 +312,11 @@ class _MapScreenState extends State<MapScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppTheme.surface,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AppTheme.textTertiary,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              Text(event.title, style: Theme.of(context).textTheme.titleLarge),
-
-              const SizedBox(height: 10),
-
-              Row(
-                children: [
-                  Chip(
-                    label: Text(event.source.name.toUpperCase()),
-                    backgroundColor: AppTheme.surface,
-                    side: BorderSide(
-                      color: Colors.white.withValues(alpha: 0.4),
-                    ),
-                    labelStyle: const TextStyle(
-                      fontSize: 12,
-                      color: Color.fromARGB(255, 238, 238, 238),
-                      fontWeight: FontWeight.bold,
-                    ),
-                    padding: EdgeInsets.zero,
-                    visualDensity: VisualDensity.compact,
-                  ),
-
-                  const Spacer(),
-
-                  SeverityBadge(severity: event.severity),
-                ],
-              ),
-
-              const SizedBox(height: 8),
-              Text(
-                event.description,
-                style: const TextStyle(
-                  color: Color.fromARGB(255, 203, 203, 203),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Icon(
-                    Icons.location_on,
-                    size: 16,
-                    color: const Color.fromARGB(255, 255, 255, 255),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    event.locationName,
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                  const Spacer(),
-                  Text(
-                    event.timeAgo,
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () async {
-                    final ssh = context.read<SSHService>();
-
-                    final overlayKml = OverlayService.generateEventOverlayKml(
-                      event,
-                    );
-
-                    await ssh.sendOverlayKML(overlayKml);
-
-                    await ssh.flyTo(
-                      latitude: event.latitude,
-                      longitude: event.longitude,
-                      range: 500000,
-                      tilt: 45,
-                    );
-
-                    final box = Hive.box(AppConstants.settingsBox);
-                    final ttsEnabled = box.get(
-                      AppConstants.keyTTSEnabled,
-                      defaultValue: true,
-                    );
-                    if (ttsEnabled && context.mounted) {
-                      final tts = context.read<TTSService>();
-                      tts.speakEventSummary(event);
-                    }
-                  },
-                  icon: const Icon(Icons.send_rounded, size: 16),
-                  label: const Text('Fly to on LG'),
-                ),
-              ),
-
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  style: ButtonStyle(
-                    backgroundColor: WidgetStateProperty.all(
-                      const Color.fromARGB(255, 209, 17, 3),
-                    ),
-                  ),
-                  onPressed: () async {
-                    final ssh = context.read<SSHService>();
-
-                    final overlayKml = OverlayService.generateEventOverlayKml(
-                      event,
-                    );
-
-                    await ssh.clearoverlayKML(overlayKml);
-                  },
-                  icon: const Icon(Icons.send_rounded, size: 16),
-                  label: const Text('Clear Overlay KML'),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+      builder: (context) => EventDetailSheet(event: event),
     );
   }
 
