@@ -107,7 +107,7 @@ class OverlayService {
 </kml>''';
 }
 
-  static Future<String> generateRegionOverlayKML(List<GlobalEvent> visibleEvents, GemmaService geminiService) async {
+  static Future<String> generateRegionOverlayKML(List<GlobalEvent> visibleEvents, GemmaService gemmmaService) async {
     final dominant = TopRegionHelper.getDominantCategory(visibleEvents);
     final imageURL = dominant != null ? _getHeaderImageURL(dominant) : 'https://images.unsplash.com/photo-1713098965471-d324f294a71d?q=80&w=2702&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D';
 
@@ -115,12 +115,12 @@ class OverlayService {
     final severityCount = TopRegionHelper.getSeverityCounts(visibleEvents);
     final topEvent = TopRegionHelper.getTopEvent(visibleEvents);
 
-    String geminiSummary;
+    String gemmaSummary;
 
     try{
-      geminiSummary = await geminiService.generateRegionSummary(visibleEvents);
+      gemmaSummary = await gemmmaService.generateRegionSummary(visibleEvents);
     }catch(e){
-      geminiSummary = 'AI summary temporarily unavailable. ${visibleEvents.length} active events detected in this region.';
+      gemmaSummary = 'AI summary temporarily unavailable. ${visibleEvents.length} active events detected in this region.';
     }
 
 
@@ -231,7 +231,7 @@ class OverlayService {
               <p style="color: #c5c6c7; font-size: 11px; margin: 0 0 8px 0; letter-spacing: 1px;">AI REGIONAL SUMMARY</p>
               <div style="background-color: #1e293b; border-radius: 8px; padding: 12px 14px; border-left: 3px solid #06b6d4;">
                 <p style="color: #a9aaab; font-size: 13px; font-style: italic; margin: 0;">
-                  $geminiSummary
+                  $gemmaSummary
                 </p>
               </div>
             </div>

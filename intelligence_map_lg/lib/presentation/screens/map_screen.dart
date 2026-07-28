@@ -11,7 +11,6 @@ import '../../services/ssh_service.dart';
 import '../../services/kml_service.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import '../widgets/cluster_badge.dart';
-import '../widgets/severity_badge.dart';
 import '../../services/overlay_service.dart';
 import '../../core/utils/top_region_helper.dart';
 import '../widgets/category_legend.dart';
@@ -267,10 +266,10 @@ class _MapScreenState extends State<MapScreen> {
 
     String overlayKML;
 
-    final gemini = context.read<GemmaService>();
+    final gemma = context.read<GemmaService>();
     overlayKML = await OverlayService.generateRegionOverlayKML(
       visibleEvents,
-      gemini,
+      gemma,
     );
 
     await ssh.sendOverlayKML(overlayKML);

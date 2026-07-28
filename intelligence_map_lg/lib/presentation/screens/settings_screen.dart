@@ -27,7 +27,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _isConnected = false;
   bool _ttsEnabled = true;
 
-  final _geminiApiKeyController = TextEditingController();
   final _openRouterKeyController = TextEditingController();
 
   @override
@@ -53,10 +52,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         defaultValue: 'lg',
       );
       _numberOfRigs = box.get(AppConstants.keyNumberOfRigs, defaultValue: 3);
-      _geminiApiKeyController.text = box.get(
-        AppConstants.keyGeminiApiKey,
-        defaultValue: '',
-      );
       _openRouterKeyController.text = box.get(AppConstants.keyOpenRouterApiKey, defaultValue: '');
     });
   }
@@ -69,7 +64,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await box.put(AppConstants.keySSHPassword, _passwordController.text);
     await box.put(AppConstants.keyNumberOfRigs, _numberOfRigs);
     await box.put(AppConstants.keyTTSEnabled, _ttsEnabled);
-    await box.put(AppConstants.keyGeminiApiKey, _geminiApiKeyController.text.replaceAll('\u0000', '').trim(),);
     await box.put(AppConstants.keyOpenRouterApiKey, _openRouterKeyController.text.trim());
   }
 
@@ -640,7 +634,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _portController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
-    _geminiApiKeyController.dispose();
     _openRouterKeyController.dispose();
     super.dispose();
   }
