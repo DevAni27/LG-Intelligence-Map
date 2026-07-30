@@ -1,5 +1,6 @@
 import '../data/models/global_event.dart';
 import '../core/utils/top_region_helper.dart';
+import 'gemma_service.dart';
 
 class OverlayService {
   static String generateEventOverlayKml(GlobalEvent event) {
@@ -106,13 +107,22 @@ class OverlayService {
 </kml>''';
 }
 
-  static String generateRegionOverlayKML(List<GlobalEvent> visibleEvents){
+  static Future<String> generateRegionOverlayKML(List<GlobalEvent> visibleEvents, GemmaService gemmmaService) async {
     final dominant = TopRegionHelper.getDominantCategory(visibleEvents);
     final imageURL = dominant != null ? _getHeaderImageURL(dominant) : 'https://images.unsplash.com/photo-1713098965471-d324f294a71d?q=80&w=2702&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D';
 
     final categoryCount = TopRegionHelper.getCategoryCounts(visibleEvents);
     final severityCount = TopRegionHelper.getSeverityCounts(visibleEvents);
     final topEvent = TopRegionHelper.getTopEvent(visibleEvents);
+
+    String gemmaSummary;
+
+    try{
+      gemmaSummary = await gemmmaService.generateRegionSummary(visibleEvents);
+    }catch(e){
+      gemmaSummary = 'AI summary temporarily unavailable. ${visibleEvents.length} active events detected in this region.';
+    }
+
 
     final categoryRows = [
     (EventCategory.earthquake,    'Earthquakes',    '#EF4444'),
@@ -181,7 +191,7 @@ class OverlayService {
 
             <!-- Title -->
             <div style="padding: 14px 20px 4px 20px;">
-              <p style="color: #64748b; font-size: 11px; margin: 0 0 4px 0; letter-spacing: 1px;">REGION OVERVIEW</p>
+              <p style="color: #c5c6c7; font-size: 11px; margin: 0 0 4px 0; letter-spacing: 1px;">REGION OVERVIEW</p>
               <h2 style="color: #ffffff; font-size: 20px; margin: 0 0 4px 0;">Current Map View</h2>
               <p style="color: #94a3b8; font-size: 13px; margin: 0;">${visibleEvents.length} active events in this area</p>
             </div>
@@ -196,7 +206,7 @@ class OverlayService {
 
             <!-- Event Breakdown -->
             <div style="padding: 0 20px 12px 20px;">
-              <p style="color: #64748b; font-size: 11px; margin: 0 0 8px 0; letter-spacing: 1px;">EVENT BREAKDOWN</p>
+              <p style="color: #c5c6c7; font-size: 11px; margin: 0 0 8px 0; letter-spacing: 1px;">EVENT BREAKDOWN</p>
               <table style="width: 100%; border-collapse: collapse;">
                 $categoryRows
               </table>
@@ -207,7 +217,7 @@ class OverlayService {
 
             <!-- Severity Breakdown -->
             <div style="padding: 0 20px 12px 20px;">
-              <p style="color: #64748b; font-size: 11px; margin: 0 0 8px 0; letter-spacing: 1px;">SEVERITY BREAKDOWN</p>
+              <p style="color: #c5c6c7; font-size: 11px; margin: 0 0 8px 0; letter-spacing: 1px;">SEVERITY BREAKDOWN</p>
               <table style="width: 100%; border-collapse: collapse;">
                 $severityRows
               </table>
@@ -218,10 +228,10 @@ class OverlayService {
 
             <!-- AI Summary Placeholder -->
             <div style="padding: 0 20px 16px 20px;">
-              <p style="color: #64748b; font-size: 11px; margin: 0 0 8px 0; letter-spacing: 1px;">AI REGIONAL SUMMARY</p>
+              <p style="color: #c5c6c7; font-size: 11px; margin: 0 0 8px 0; letter-spacing: 1px;">AI REGIONAL SUMMARY</p>
               <div style="background-color: #1e293b; border-radius: 8px; padding: 12px 14px; border-left: 3px solid #06b6d4;">
-                <p style="color: #475569; font-size: 13px; font-style: italic; margin: 0;">
-                  AI-powered regional analysis coming in Phase 4. Gemini will generate a natural language summary of events, patterns, and risks in this region.
+                <p style="color: #a9aaab; font-size: 13px; font-style: italic; margin: 0;">
+                  $gemmaSummary
                 </p>
               </div>
             </div>

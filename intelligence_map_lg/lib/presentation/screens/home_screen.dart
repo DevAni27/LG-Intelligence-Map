@@ -10,6 +10,7 @@ import '../widgets/stat_card.dart';
 import '../widgets/connection_status.dart';
 import '../widgets/top_regions_card.dart';
 import '../../core/utils/top_region_helper.dart';
+import '../widgets/daily_pulse_card.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -71,7 +72,7 @@ class HomeScreen extends StatelessWidget {
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                    child: _buildDailyPulseCard(context),
+                    child: DailyPulseCard(),
                   ),
                 ),                
 

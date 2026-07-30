@@ -10,7 +10,6 @@ import '../../logic/blocs/events/events_event.dart';
 import '../../logic/blocs/events/events_state.dart';
 import '../../services/ssh_service.dart';
 
-
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
@@ -28,6 +27,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _isConnected = false;
   bool _ttsEnabled = true;
 
+  final _openRouterKeyController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
@@ -38,10 +39,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final box = Hive.box(AppConstants.settingsBox);
     setState(() {
       _ipController.text = box.get(AppConstants.keySSHHost, defaultValue: '');
-      _portController.text = box.get(AppConstants.keySSHPort, defaultValue: '22');
-      _usernameController.text = box.get(AppConstants.keySSHUser, defaultValue: 'lg');
-      _passwordController.text = box.get(AppConstants.keySSHPassword, defaultValue: 'lg');
+      _portController.text = box.get(
+        AppConstants.keySSHPort,
+        defaultValue: '22',
+      );
+      _usernameController.text = box.get(
+        AppConstants.keySSHUser,
+        defaultValue: 'lg',
+      );
+      _passwordController.text = box.get(
+        AppConstants.keySSHPassword,
+        defaultValue: 'lg',
+      );
       _numberOfRigs = box.get(AppConstants.keyNumberOfRigs, defaultValue: 3);
+      _openRouterKeyController.text = box.get(AppConstants.keyOpenRouterApiKey, defaultValue: '');
     });
   }
 
@@ -53,6 +64,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await box.put(AppConstants.keySSHPassword, _passwordController.text);
     await box.put(AppConstants.keyNumberOfRigs, _numberOfRigs);
     await box.put(AppConstants.keyTTSEnabled, _ttsEnabled);
+    await box.put(AppConstants.keyOpenRouterApiKey, _openRouterKeyController.text.trim());
   }
 
   Future<void> _connect() async {
@@ -62,7 +74,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       );
       return;
     }
-    try{
+    try {
       setState(() => _isConnecting = true);
       await _saveSettings();
 
@@ -73,59 +85,58 @@ class _SettingsScreenState extends State<SettingsScreen> {
         username: _usernameController.text,
         password: _passwordController.text,
         numberOfRigs: _numberOfRigs,
-    );
-    
+      );
+
       if (mounted) {
         setState(() {
           _isConnecting = false;
           _isConnected = true;
-      });;
+        });
+        ;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("Connected to Rig Successfully",
-            style: TextStyle(color: Colors.white),
+            content: Text(
+              "Connected to Rig Successfully",
+              style: TextStyle(color: Colors.white),
             ),
             backgroundColor: const Color.fromARGB(255, 14, 102, 17),
           ),
         );
       }
-    } catch(e){
-
+    } catch (e) {
       if (mounted) {
         setState(() {
-        _isConnecting = false;
-        _isConnected = false;
-      });
+          _isConnecting = false;
+          _isConnected = false;
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("Connection Failed: ${e.toString()}",
+            content: Text(
+              "Connection Failed: ${e.toString()}",
               style: const TextStyle(color: Colors.white),
             ),
             backgroundColor: Colors.red,
-            
           ),
         );
       }
     }
-    
   }
 
-  Future <void> _disconnect() async{
+  Future<void> _disconnect() async {
     final ssh = context.read<SSHService>();
     ssh.disconnect();
     setState(() => _isConnected = false);
     if (mounted) {
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Disconnected from Rig Successfully",
-              style: const TextStyle(color: Colors.white),
-            ),
-            backgroundColor: Colors.red,
-            
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Disconnected from Rig Successfully",
+            style: const TextStyle(color: Colors.white),
           ),
-        );
-      }
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
@@ -247,15 +258,47 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             width: 28,
                             height: 28,
                             child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                      )
+                          ),
+                        )
                       : ElevatedButton(
                           onPressed: _isConnected ? _disconnect : _connect,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: _isConnected ? Colors.red.shade700 : Colors.green.shade700,
+                            backgroundColor: _isConnected
+                                ? Colors.red.shade700
+                                : Colors.green.shade700,
                           ),
                           child: Text(_isConnected ? 'Disconnect' : 'Connect'),
                         ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          _buildSectionHeader(
+            context,
+            icon: Icons.psychology_outlined,
+            title: 'AI Configuration',
+          ),
+          const SizedBox(height: 12),
+          _buildCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  controller: _openRouterKeyController,
+                  obscureText: true,
+                  decoration: const InputDecoration(
+                    hintText: 'OpenRouter API Key (Gemma 4)',
+                    prefixIcon: Icon(Icons.key_outlined, size: 20),
+                  ),
+                  onChanged: (_) => _saveSettings(),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Powers AI summaries using Google Gemma 4 via OpenRouter',
+                  style: TextStyle(color: AppTheme.textTertiary, fontSize: 11),
                 ),
               ],
             ),
@@ -274,9 +317,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
               return _buildCard(
                 child: Column(
                   children: [
-                    _buildSourceToggle(context, state, EventSource.usgs, 'USGS'),
                     _buildSourceToggle(
-                        context, state, EventSource.nasaEonet, 'NASA EONET'),
+                      context,
+                      state,
+                      EventSource.usgs,
+                      'USGS',
+                    ),
+                    _buildSourceToggle(
+                      context,
+                      state,
+                      EventSource.nasaEonet,
+                      'NASA EONET',
+                    ),
                     _buildSourceToggle(context, state, EventSource.who, 'WHO'),
                   ],
                 ),
@@ -307,31 +359,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           _buildSectionHeader(context, icon: Icons.volume_up, title: 'Voice'),
           const SizedBox(height: 12),
-            _buildCard(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Text to Speech'),
-                      Text('Read overlay content aloud', 
-                        style: TextStyle(color: AppTheme.textTertiary, fontSize: 14, fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                  Switch(
-                    value: _ttsEnabled,
-                    onChanged: (value) async {
-                      setState(() => _ttsEnabled = value);
-                      await _saveSettings();
-                    },
-                    activeThumbColor: AppTheme.primary,
-                  ),
-                ],
-              ),
+          _buildCard(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Text to Speech'),
+                    Text(
+                      'Read overlay content aloud',
+                      style: TextStyle(
+                        color: AppTheme.textTertiary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                Switch(
+                  value: _ttsEnabled,
+                  onChanged: (value) async {
+                    setState(() => _ttsEnabled = value);
+                    await _saveSettings();
+                  },
+                  activeThumbColor: AppTheme.primary,
+                ),
+              ],
             ),
+          ),
 
-            const SizedBox(height: 24),
+          const SizedBox(height: 24),
 
           // ── LG Quick Commands ─────────────────────────
           _buildSectionHeader(
@@ -354,7 +412,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
                 const Divider(height: 1),
-                
+
                 _buildCommandRow(
                   context,
                   'Clear Logo',
@@ -395,7 +453,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           const SizedBox(height: 40),
-          
         ],
       ),
     );
@@ -445,8 +502,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             value: enabled,
             onChanged: (value) {
               context.read<EventsBloc>().add(
-                    ToggleSource(source: source, enabled: value),
-                  );
+                ToggleSource(source: source, enabled: value),
+              );
             },
             activeColor: AppTheme.primary,
           ),
@@ -484,7 +541,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           const SizedBox(width: 10),
-          Text(source.label, style: const TextStyle(fontWeight: FontWeight.w500)),
+          Text(
+            source.label,
+            style: const TextStyle(fontWeight: FontWeight.w500),
+          ),
           const Spacer(),
           Flexible(
             child: Text(
@@ -510,13 +570,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
       contentPadding: EdgeInsets.zero,
       leading: Icon(
         icon,
-        color: isDestructive ? AppTheme.severityCritical : AppTheme.textSecondary,
+        color: isDestructive
+            ? AppTheme.severityCritical
+            : AppTheme.textSecondary,
         size: 20,
       ),
       title: Text(
         label,
         style: TextStyle(
-          color: isDestructive ? AppTheme.severityCritical : AppTheme.textPrimary,
+          color: isDestructive
+              ? AppTheme.severityCritical
+              : AppTheme.textPrimary,
         ),
       ),
       trailing: const Icon(Icons.chevron_right, color: AppTheme.textTertiary),
@@ -570,6 +634,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _portController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
+    _openRouterKeyController.dispose();
     super.dispose();
   }
 }

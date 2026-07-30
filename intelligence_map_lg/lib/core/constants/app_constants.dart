@@ -37,6 +37,7 @@ class AppConstants {
   static const String keyGeminiApiKey = 'gemini_api_key';
   static const String keyLanguage = 'language';
   static const String keyTTSEnabled = 'tts_enabled';
+  static const String keyOpenRouterApiKey = 'openrouter_api_key';
 }
 
 class ApiEndpoints {

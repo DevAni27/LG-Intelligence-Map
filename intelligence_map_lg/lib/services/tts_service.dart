@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter_tts/flutter_tts.dart';
 import '../data/models/global_event.dart';
 import '../core/utils/top_region_helper.dart';
+import 'gemma_service.dart';
 
 class TTSService{
   final FlutterTts _tts = FlutterTts();
+  final GemmaService _geminiService = GemmaService();
 
   TTSService() {
     _init();
@@ -25,7 +29,8 @@ class TTSService{
 
   //tts for a specific region
   Future<void> speakRegionSummary(List<GlobalEvent> visibleEvents) async {
-    final text = _buildRegionSpeech(visibleEvents);
+    final aiSummary = await _geminiService.generateRegionSummary(visibleEvents);
+    final text = _buildRegionSpeech(visibleEvents, aiSummary);
     await _tts.stop();
     await _tts.speak(text);
   }
@@ -34,6 +39,13 @@ class TTSService{
     await _tts.stop();
   }
 
+  Future<void> speakAndWait(String text) async {
+  final completer = Completer();
+  _tts.setCompletionHandler(() => completer.complete());
+  await _tts.speak(text);
+  await completer.future;
+}
+
   String _buildEventSpeech(GlobalEvent event){
     final desc = event.description.length > 150 
     ? event.description.substring(0, 150) 
@@ -41,7 +53,7 @@ class TTSService{
     return "We are looking at ${event.title}, where the severity level right now is ${event.severity.name.toUpperCase()}. The reason behind this severity level is the occurence of a ${_categoryToSpeech(event.category)} in ${event.locationName}. Let me provide some more details on this, $desc";
   }
 
-  String _buildRegionSpeech(List<GlobalEvent> visibleEvents) {
+  String _buildRegionSpeech(List<GlobalEvent> visibleEvents, String summary) {
   if (visibleEvents.isEmpty) {
     return 'No active events detected in the current map view.';
   }
@@ -65,7 +77,8 @@ class TTSService{
   return 'The current map view shows ${visibleEvents.length} active events, '
       'including $categoryParts. '
       '$topEventSpeech '
-      'The dominant event type in this region is ${dominant?.name ?? "unknown"}.';
+      'The dominant event type in this region is ${dominant?.name ?? "unknown"}.'
+      '$summary';
   }
 
   String _categoryToSpeech(EventCategory category) {
