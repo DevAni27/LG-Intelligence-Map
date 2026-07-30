@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_tts/flutter_tts.dart';
 import '../data/models/global_event.dart';
 import '../core/utils/top_region_helper.dart';
@@ -36,6 +38,13 @@ class TTSService{
   Future<void> stop() async{
     await _tts.stop();
   }
+
+  Future<void> speakAndWait(String text) async {
+  final completer = Completer();
+  _tts.setCompletionHandler(() => completer.complete());
+  await _tts.speak(text);
+  await completer.future;
+}
 
   String _buildEventSpeech(GlobalEvent event){
     final desc = event.description.length > 150 

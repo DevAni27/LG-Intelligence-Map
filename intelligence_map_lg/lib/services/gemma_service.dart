@@ -4,6 +4,7 @@ import '../data/models/global_event.dart';
 import '../core/utils/top_region_helper.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart';
 
 class GemmaService {
   //method to get the gemma model
@@ -38,12 +39,26 @@ class GemmaService {
         }),
       );
 
+      
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        return data['choices'][0]['message']['content'] ??
-            'No response received.';
+
+        // Safe null checking at each level
+        final choices = data['choices'];
+        if (choices == null || choices.isEmpty) {
+          return 'No response received. Please try again.';
+        }
+
+        final message = choices[0]['message'];
+        if (message == null) {
+          return 'No response received. Please try again.';
+        }
+
+        final content = message['content'];
+        return content ?? 'No response received. Please try again.';
       } else {
-        return 'Error ${response.statusCode}: ${response.body}';
+        return 'Error ${response.statusCode}: Please try again.';
       }
     } catch (e) {
       return 'Failed to get response: ${e.toString()}';
@@ -97,6 +112,9 @@ Rules:
 - Use simple conversational English
 - Only reference events from the list above
 - Never say you are an AI or reading a list
+- You ONLY answer questions related to current global events, disasters, disease outbreaks, conflicts, or world news
+- If the question is unrelated to global events say exactly: "I can only answer questions about current global events. Try asking about earthquakes, disasters, disease outbreaks, or what is happening in a specific region."
+- Never answer general knowledge, geography trivia, or personal questions
 - If answer relates to a specific location add on final line: FLYTO:[name]|[lat]|[lon]
 - Add FLYTO for any specific location mentioned — country, city, OR region (like Asia, Africa, Europe)
 - For regions use approximate center coordinates: Asia = 34|100, Africa = 0|20, Europe = 50|10, Americas = 15|-90
