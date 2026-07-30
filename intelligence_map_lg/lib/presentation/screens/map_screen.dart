@@ -256,7 +256,40 @@ class _MapScreenState extends State<MapScreen> {
 
     // Generate and send KML
     final kmlContent = kml.generateEventsKML(state.filteredEvents);
-    final success = await ssh.sendKML(kmlContent);
+    try {
+      await Future.wait([
+        ssh.sendKML(kmlContent),
+        ssh.flyTo(
+          latitude: _mapController.camera.center.latitude,
+          longitude: _mapController.camera.center.longitude,
+          range: _zoomToRange(_mapController.camera.zoom),
+        ),
+      ]);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Flying to location!',
+              style: TextStyle(color: Colors.white),
+            ),
+            backgroundColor: Color.fromARGB(255, 12, 109, 50),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Failed: ${e.toString()}',
+              style: const TextStyle(color: Colors.white),
+            ),
+            backgroundColor: AppTheme.severityCritical,
+          ),
+        );
+      }
+    }
 
     final bounds = _mapController.camera.visibleBounds;
     final visibleEvents = TopRegionHelper.getVisibleEvents(
@@ -280,22 +313,6 @@ class _MapScreenState extends State<MapScreen> {
 
     if (ttsEnabled) {
       tts.speakRegionSummary(visibleEvents);
-    }
-
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            success
-                ? 'Flying to the location!'
-                : 'Failed to fly to the location.',
-            style: const TextStyle(color: Colors.white),
-          ),
-          backgroundColor: success
-              ? const Color.fromARGB(255, 12, 109, 50)
-              : AppTheme.severityCritical,
-        ),
-      );
     }
 
     // Also fly to the current map center
