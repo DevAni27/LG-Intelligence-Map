@@ -6,7 +6,10 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 
+
 class GemmaService {
+  final Map<String, String> _explanationCache = {};
+
   //method to get the gemma model
 
   String? _getApiKey() {
@@ -199,8 +202,16 @@ Question: $question''';
 
   Future<String> eventExplain(GlobalEvent event) async {
     try {
+      //checking cache first before calling the model
+      if(_explanationCache.containsKey(event.id)){
+        debugPrint('Returning cached explanation for event ${event.id}');
+        return _explanationCache[event.id]!;
+      }
+      
       final prompt = _buildEventPrompt(event);
       final response = await _callGemma(prompt);
+
+      _explanationCache[event.id] = response;
       return response;
     } catch (e) {
       return 'Failed to get response: ${e.toString()}';
