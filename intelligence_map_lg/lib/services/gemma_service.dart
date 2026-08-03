@@ -204,10 +204,9 @@ Question: $question''';
     try {
       //checking cache first before calling the model
       if(_explanationCache.containsKey(event.id)){
-        debugPrint('Returning cached explanation for event ${event.id}');
         return _explanationCache[event.id]!;
       }
-      
+
       final prompt = _buildEventPrompt(event);
       final response = await _callGemma(prompt);
 
