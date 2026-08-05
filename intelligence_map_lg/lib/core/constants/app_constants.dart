@@ -44,17 +44,27 @@ class ApiEndpoints {
   ApiEndpoints._();
 
   // USGS Earthquake API
-  static const String usgsBase = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0';
+  static const String usgsBase =
+      'https://earthquake.usgs.gov/earthquakes/feed/v1.0';
   static const String usgsAllDay = '$usgsBase/summary/all_day.geojson';
   static const String usgsAllWeek = '$usgsBase/summary/all_week.geojson';
   static const String usgsAllMonth = '$usgsBase/summary/all_month.geojson';
-  static const String usgsSignificantDay = '$usgsBase/summary/significant_day.geojson';
-  static const String usgsQuery = 'https://earthquake.usgs.gov/fdsnws/event/1/query';
+  static const String usgsSignificantDay =
+      '$usgsBase/summary/significant_day.geojson';
+  static const String usgsQuery =
+      'https://earthquake.usgs.gov/fdsnws/event/1/query';
 
   // NASA EONET
-  static const String nasaEonetEvents = 'https://eonet.gsfc.nasa.gov/api/v3/events';
-  static const String nasaEonetCategories = 'https://eonet.gsfc.nasa.gov/api/v3/categories';
+  static const String nasaEonetEvents =
+      'https://eonet.gsfc.nasa.gov/api/v3/events';
+  static const String nasaEonetCategories =
+      'https://eonet.gsfc.nasa.gov/api/v3/categories';
 
   // WHO Disease Outbreak News (RSS)
-  static const String who = "https://www.who.int/api/news/diseaseoutbreaknews?sf_culture=en&\$orderby=PublicationDate+desc&\$top=100";
+  static const String who =
+      "https://www.who.int/api/news/diseaseoutbreaknews?sf_culture=en&\$orderby=PublicationDate+desc&\$top=100";
+
+  //GDELT source
+  static const String gdelt =
+      'https://api.gdeltproject.org/api/v2/doc/doc?query=conflict%20OR%20war%20OR%20attack&mode=ArtList&maxrecords=25&format=json&timespan=24h&sourcelang=english';
 }

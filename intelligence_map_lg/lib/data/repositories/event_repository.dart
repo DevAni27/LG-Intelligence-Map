@@ -2,6 +2,7 @@ import '../models/global_event.dart';
 import '../sources/usgs_service.dart';
 import '../sources/nasa_eonet_service.dart';
 import '../sources/who_service.dart';
+import '../sources/gdelt_service.dart';
 
 /// Represents the status of a single data source.
 enum SourceStatus { idle, loading, loaded, error }
@@ -45,14 +46,17 @@ class EventRepository {
   final USGSService _usgsService;
   final NASAEonetService _nasaEonetService;
   final WHOService _whoService;
+  final GDELTService _gdeltService;
 
   EventRepository({
     USGSService? usgsService,
     NASAEonetService? nasaEonetService,
     WHOService? whoService,
-  })  : _usgsService = usgsService ?? USGSService(),
-        _nasaEonetService = nasaEonetService ?? NASAEonetService(),
-        _whoService = whoService ?? WHOService();
+    GDELTService? gdeltService,
+  }) : _usgsService = usgsService ?? USGSService(),
+       _nasaEonetService = nasaEonetService ?? NASAEonetService(),
+       _whoService = whoService ?? WHOService(),
+       _gdeltService = gdeltService ?? GDELTService();
 
   /// Fetches events from all enabled sources in parallel.
   /// Returns a map of source → result, so each source has its own
@@ -62,6 +66,7 @@ class EventRepository {
       EventSource.usgs,
       EventSource.nasaEonet,
       EventSource.who,
+      EventSource.gdelt,
     },
   }) async {
     final results = <EventSource, SourceResult>{};
@@ -84,9 +89,7 @@ class EventRepository {
         source: EventSource.nasaEonet,
         status: SourceStatus.loading,
       );
-      futures.add(
-        _fetchNASA().then((r) => results[EventSource.nasaEonet] = r),
-      );
+      futures.add(_fetchNASA().then((r) => results[EventSource.nasaEonet] = r));
     }
 
     if (enabledSources.contains(EventSource.who)) {
@@ -94,9 +97,15 @@ class EventRepository {
         source: EventSource.who,
         status: SourceStatus.loading,
       );
-      futures.add(
-        _fetchWHO().then((r) => results[EventSource.who] = r),
+      futures.add(_fetchWHO().then((r) => results[EventSource.who] = r));
+    }
+
+    if (enabledSources.contains(EventSource.gdelt)) {
+      results[EventSource.gdelt] = const SourceResult(
+        source: EventSource.gdelt,
+        status: SourceStatus.loading,
       );
+      futures.add(_fetchGDELT().then((r) => results[EventSource.gdelt] = r));
     }
 
     // Wait for all to complete (they handle errors internally)
@@ -132,11 +141,13 @@ class EventRepository {
 
     for (var i = 1; i < events.length; i++) {
       final event = events[i];
-      final isDuplicate = unique.any((existing) =>
-          existing.category == event.category &&
-          _isNearby(existing, event, thresholdKm: 50) &&
-          existing.timestamp.difference(event.timestamp).abs() <
-              const Duration(hours: 1));
+      final isDuplicate = unique.any(
+        (existing) =>
+            existing.category == event.category &&
+            _isNearby(existing, event, thresholdKm: 50) &&
+            existing.timestamp.difference(event.timestamp).abs() <
+                const Duration(hours: 1),
+      );
 
       if (!isDuplicate) {
         unique.add(event);
@@ -203,6 +214,24 @@ class EventRepository {
     } catch (e) {
       return SourceResult(
         source: EventSource.who,
+        status: SourceStatus.error,
+        errorMessage: e.toString(),
+      );
+    }
+  }
+
+  Future<SourceResult> _fetchGDELT() async {
+    try {
+      final events = await _gdeltService.fetchGDELTData();
+      return SourceResult(
+        source: EventSource.gdelt,
+        status: SourceStatus.loaded,
+        events: events,
+        lastUpdated: DateTime.now(),
+      );
+    } catch (e) {
+      return SourceResult(
+        source: EventSource.gdelt,
         status: SourceStatus.error,
         errorMessage: e.toString(),
       );

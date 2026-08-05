@@ -330,6 +330,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       'NASA EONET',
                     ),
                     _buildSourceToggle(context, state, EventSource.who, 'WHO'),
+                    _buildSourceToggle(context, state, EventSource.gdelt, 'GDELT'),
                   ],
                 ),
               );
