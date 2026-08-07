@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lg_world_intelligence_map/core/constants/app_constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/models/global_event.dart';
 import '../../logic/blocs/events/events_bloc.dart';
@@ -11,6 +12,8 @@ import '../../services/tts_service.dart';
 import '../../data/sources/usgs_service.dart';
 import '../../data/sources/nasa_eonet_service.dart';
 import '../widgets/severity_badge.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import '../../services/kml_service.dart';
 
 class TimelineScreen extends StatefulWidget {
   const TimelineScreen({super.key});
@@ -32,7 +35,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
   bool _isLoading = false;
   String? _errorMessage;
 
-  final bool _isPlaying = false;
+  bool _isPlaying = false;
   int _currentIndex = 0;
   double _playbackSpeed = 1.0;
   Timer? _timer;
@@ -288,7 +291,13 @@ class _TimelineScreenState extends State<TimelineScreen> {
                 children: [1.0, 2.0, 5.0].map((speed) {
                   final isSelected = _playbackSpeed == speed;
                   return GestureDetector(
-                    onTap: () => setState(() => _playbackSpeed = speed),
+                    onTap: () {
+                      setState(() => _playbackSpeed = speed);
+                      if (_isPlaying) {
+                        _pausePlayback();
+                        _startPlayback();
+                      }
+                    },
                     child: Container(
                       margin: const EdgeInsets.only(left: 6),
                       padding: const EdgeInsets.symmetric(
@@ -553,7 +562,92 @@ class _TimelineScreenState extends State<TimelineScreen> {
     }
   }
 
-  void _startPlayback() {}
-  void _pausePlayback() {}
-  void _stopPlayback() {}
+  void _startPlayback() {
+    if (_historicalEvents.isEmpty) return;
+
+    final ssh = context.read<SSHService>();
+    if (!ssh.isConnected) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Not connected to LG Rig'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final kml = context.read<KMLService>();
+    final kmlContent = kml.generateEventsKML(_historicalEvents);
+    ssh.sendKML(kmlContent); // fire and forget — no await needed
+
+    setState(() {
+      _isPlaying = true;
+      _currentIndex = 0; // always start from beginning
+    });
+
+    _flytoEvent(_historicalEvents[0]);
+
+    final seconds = _playbackSpeed == 5.0
+        ? 3
+        : _playbackSpeed == 2.0
+        ? 6
+        : 10;
+
+    _timer = Timer.periodic(Duration(seconds: seconds), (timer) async {
+      final nextIndex = _currentIndex + 1;
+      if (nextIndex >= _historicalEvents.length) {
+        _stopPlayback();
+        return;
+      }
+      setState(() => _currentIndex = nextIndex);
+      await _flytoEvent(_historicalEvents[nextIndex]);
+    });
+  }
+
+  void _pausePlayback() {
+    _timer?.cancel();
+    context.read<TTSService>().stop();
+    setState(() => _isPlaying = false);
+  }
+
+  void _stopPlayback() {
+    _timer?.cancel();
+
+    final ssh = context.read<SSHService>();
+    final tts = context.read<TTSService>();
+
+    tts.stop();
+
+    if (ssh.isConnected) {
+      ssh.clearKML();
+      ssh.clearoverlayKML('');
+    }
+
+    setState(() {
+      _isPlaying = false;
+      _currentIndex = 0;
+    });
+  }
+
+  Future<void> _flytoEvent(GlobalEvent event) async {
+    final ssh = context.read<SSHService>();
+    if (!ssh.isConnected) return;
+
+    await Future.wait([
+      ssh.flyTo(
+        latitude: event.latitude,
+        longitude: event.longitude,
+        range: 500000,
+        tilt: 45,
+      ),
+      ssh.sendOverlayKML(OverlayService.generateEventOverlayKml(event)),
+    ]);
+
+    final box = Hive.box(AppConstants.settingsBox);
+    final ttsEnabled = box.get(AppConstants.keyTTSEnabled, defaultValue: true);
+    if (ttsEnabled && context.mounted) {
+      final tts = context.read<TTSService>();
+      tts.speakTourEventSummary(event);
+    }
+  }
 }
