@@ -4,29 +4,26 @@ import 'gemma_service.dart';
 
 class OverlayService {
   static String generateEventOverlayKml(GlobalEvent event) {
-  final imageUrl = _getHeaderImageURL(event.category);
-  final catColor = _categoryColorHex(event.category);
-  final sevColor = _severityColorHex(event.severity);
-  final categoryLabel = event.category.name.toUpperCase();
-  final severityLabel = event.severity.name.toUpperCase();
-  final insight = _getContextualInsight(event.category, event.severity);
+    final imageUrl = _getHeaderImageURL(event.category);
+    final catColor = _categoryColorHex(event.category);
+    final sevColor = _severityColorHex(event.severity);
+    final categoryLabel = event.category.name.toUpperCase();
+    final severityLabel = event.severity.name.toUpperCase();
+    final insight = _getContextualInsight(event.category, event.severity);
 
-  
-  final date = '${event.timestamp.day}/${event.timestamp.month}/${event.timestamp.year}';
+    final date =
+        '${event.timestamp.day}/${event.timestamp.month}/${event.timestamp.year}';
 
-  
-  final description = event.description.length > 300
-      ? '${event.description.substring(0, 300)}...'
-      : event.description;
+    final description = event.description.length > 300
+        ? '${event.description.substring(0, 300)}...'
+        : event.description;
 
-  
-  final lat = event.latitude.toStringAsFixed(4);
-  final lon = event.longitude.toStringAsFixed(4);
+    final lat = event.latitude.toStringAsFixed(4);
+    final lon = event.longitude.toStringAsFixed(4);
 
-  
-  final source = event.source.name.toUpperCase();
+    final source = event.source.name.toUpperCase();
 
-  return '''<?xml version="1.0" encoding="UTF-8"?>
+    return '''<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2"
      xmlns:gx="http://www.google.com/kml/ext/2.2">
   <Document>
@@ -105,11 +102,16 @@ class OverlayService {
     </Placemark>
   </Document>
 </kml>''';
-}
+  }
 
-  static Future<String> generateRegionOverlayKML(List<GlobalEvent> visibleEvents, GemmaService gemmmaService) async {
+  static Future<String> generateRegionOverlayKML(
+    List<GlobalEvent> visibleEvents,
+    GemmaService gemmmaService,
+  ) async {
     final dominant = TopRegionHelper.getDominantCategory(visibleEvents);
-    final imageURL = dominant != null ? _getHeaderImageURL(dominant) : 'https://images.unsplash.com/photo-1713098965471-d324f294a71d?q=80&w=2702&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D';
+    final imageURL = dominant != null
+        ? _getHeaderImageURL(dominant)
+        : 'https://images.unsplash.com/photo-1713098965471-d324f294a71d?q=80&w=2702&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D';
 
     final categoryCount = TopRegionHelper.getCategoryCounts(visibleEvents);
     final severityCount = TopRegionHelper.getSeverityCounts(visibleEvents);
@@ -117,22 +119,24 @@ class OverlayService {
 
     String gemmaSummary;
 
-    try{
+    try {
       gemmaSummary = await gemmmaService.generateRegionSummary(visibleEvents);
-    }catch(e){
-      gemmaSummary = 'AI summary temporarily unavailable. ${visibleEvents.length} active events detected in this region.';
+    } catch (e) {
+      gemmaSummary =
+          'AI summary temporarily unavailable. ${visibleEvents.length} active events detected in this region.';
     }
 
-
-    final categoryRows = [
-    (EventCategory.earthquake,    'Earthquakes',    '#EF4444'),
-    (EventCategory.floodStorm,    'Floods / Storms','#3B82F6'),
-    (EventCategory.wildfire,      'Wildfires',      '#F97316'),
-    (EventCategory.diseaseOutbreak,'Disease',       '#A855F7'),
-    (EventCategory.conflict,      'Conflicts',      '#EAB308'),
-  ].map((row) {
-    final count = categoryCount[row.$1] ?? 0;
-    return '''
+    final categoryRows =
+        [
+              (EventCategory.earthquake, 'Earthquakes', '#EF4444'),
+              (EventCategory.floodStorm, 'Floods / Storms', '#3B82F6'),
+              (EventCategory.wildfire, 'Wildfires', '#F97316'),
+              (EventCategory.diseaseOutbreak, 'Disease', '#A855F7'),
+              (EventCategory.conflict, 'Conflicts', '#EAB308'),
+            ]
+            .map((row) {
+              final count = categoryCount[row.$1] ?? 0;
+              return '''
       <tr>
         <td style="padding: 6px 0;">
           <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: ${row.$3}; margin-right: 8px;"></span>
@@ -140,17 +144,20 @@ class OverlayService {
         </td>
         <td style="padding: 6px 0; text-align: right; color: #ffffff; font-size: 13px; font-weight: bold;">$count</td>
       </tr>''';
-  }).join('');
+            })
+            .join('');
 
-  // Severity rows
-  final severityRows = [
-    (EventSeverity.critical, 'Critical', '#EF4444'),
-    (EventSeverity.high,     'High',     '#F97316'),
-    (EventSeverity.medium,   'Medium',   '#EAB308'),
-    (EventSeverity.low,      'Low',      '#22C55E'),
-  ].map((row) {
-    final count = severityCount[row.$1] ?? 0;
-    return '''
+    // Severity rows
+    final severityRows =
+        [
+              (EventSeverity.critical, 'Critical', '#EF4444'),
+              (EventSeverity.high, 'High', '#F97316'),
+              (EventSeverity.medium, 'Medium', '#EAB308'),
+              (EventSeverity.low, 'Low', '#22C55E'),
+            ]
+            .map((row) {
+              final count = severityCount[row.$1] ?? 0;
+              return '''
       <tr>
         <td style="padding: 6px 0;">
           <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: ${row.$3}; margin-right: 8px;"></span>
@@ -158,10 +165,12 @@ class OverlayService {
         </td>
         <td style="padding: 6px 0; text-align: right; color: #ffffff; font-size: 13px; font-weight: bold;">$count</td>
       </tr>''';
-  }).join('');
+            })
+            .join('');
 
-  // Top event section
-  final topEventHtml = topEvent != null ? '''
+    // Top event section
+    final topEventHtml = topEvent != null
+        ? '''
     <div style="background-color: #1e293b; border-radius: 8px; padding: 12px 14px; margin-bottom: 16px;">
       <p style="color: #64748b; font-size: 11px; margin: 0 0 6px 0; letter-spacing: 1px;">TOP EVENT IN REGION</p>
       <p style="color: #ffffff; font-size: 14px; font-weight: bold; margin: 0 0 6px 0;">${topEvent.title}</p>
@@ -171,9 +180,10 @@ class OverlayService {
         </span>
         <span style="color: #64748b; font-size: 12px; line-height: 20px;">${topEvent.locationName}</span>
       </div>
-    </div>''' : '';
+    </div>'''
+        : '';
 
-  return '''<?xml version="1.0" encoding="UTF-8"?>
+    return '''<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2"
      xmlns:gx="http://www.google.com/kml/ext/2.2">
   <Document>
@@ -250,11 +260,117 @@ class OverlayService {
     </Placemark>
   </Document>
 </kml>''';
+  }
 
-}
+  static String generateHistoricalOverlayKml(
+    String eventName,
+    String summary,
+    String locationName,
+  ) {
+    
+    String date = '';
+    String location = '';
+    String scale = '';
+    String description = '';
+    String significance = '';
 
-  static String _getHeaderImageURL(EventCategory category){
-    switch(category){
+    for (final line in summary.split('\n')) {
+      if (line.startsWith('DATE:')){
+        date = line.replaceFirst('DATE:', '').trim();
+      }
+        
+      if (line.startsWith('LOCATION:')){
+        location = line.replaceFirst('LOCATION:', '').trim();
+      }
+        
+      if (line.startsWith('SCALE:')){
+        scale = line.replaceFirst('SCALE:', '').trim();
+      }
+        
+      if (line.startsWith('DESCRIPTION:')){
+        description = line.replaceFirst('DESCRIPTION:', '').trim();
+      }
+        
+      if (line.startsWith('SIGNIFICANCE:')){
+        significance = line.replaceFirst('SIGNIFICANCE:', '').trim();
+      }
+        
+    }
+
+    return '''<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2"
+     xmlns:gx="http://www.google.com/kml/ext/2.2">
+  <Document>
+    <Style id="historical_style">
+      <BalloonStyle>
+        <bgColor>ff0f172a</bgColor>
+        <text><![CDATA[
+          <div style="font-family: Arial, sans-serif; width: 520px; background-color: #0f172a; color: #ffffff; border-radius: 12px; overflow: hidden;">
+
+            <!-- Header -->
+            <div style="background: linear-gradient(135deg, #1e293b, #0f172a); padding: 20px; border-bottom: 2px solid #06b6d4;">
+              <p style="color: #06b6d4; font-size: 11px; margin: 0 0 6px 0; letter-spacing: 2px;">HISTORICAL EVENT</p>
+              <h2 style="color: #ffffff; font-size: 20px; margin: 0; line-height: 1.3;">$eventName</h2>
+              <p style="color: #94a3b8; font-size: 13px; margin: 8px 0 0 0;">📍 $locationName</p>
+            </div>
+
+            <!-- Key Facts -->
+            <div style="padding: 16px 20px; background-color: #1e293b; margin: 12px 20px; border-radius: 8px;">
+              <p style="color: #64748b; font-size: 11px; margin: 0 0 8px 0; letter-spacing: 1px;">KEY FACTS</p>
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="color: #94a3b8; font-size: 12px; padding: 4px 0; width: 40%;">Date</td>
+                  <td style="color: #ffffff; font-size: 12px; padding: 4px 0;">$date</td>
+                </tr>
+                <tr>
+                  <td style="color: #94a3b8; font-size: 12px; padding: 4px 0;">Location</td>
+                  <td style="color: #ffffff; font-size: 12px; padding: 4px 0;">$location</td>
+                </tr>
+                <tr>
+                  <td style="color: #94a3b8; font-size: 12px; padding: 4px 0;">Scale</td>
+                  <td style="color: #ffffff; font-size: 12px; padding: 4px 0;">$scale</td>
+                </tr>
+              </table>
+            </div>
+
+            <!-- Divider -->
+            <div style="border-top: 1px solid #1e293b; margin: 0 20px;"></div>
+
+            <!-- Description -->
+            <div style="padding: 12px 20px;">
+              <p style="color: #64748b; font-size: 11px; margin: 0 0 6px 0; letter-spacing: 1px;">WHAT HAPPENED</p>
+              <p style="color: #cbd5e1; font-size: 14px; line-height: 1.6; margin: 0;">$description</p>
+            </div>
+
+            <!-- Divider -->
+            <div style="border-top: 1px solid #1e293b; margin: 0 20px;"></div>
+
+            <!-- Significance -->
+            <div style="padding: 12px 20px 16px 20px;">
+              <p style="color: #64748b; font-size: 11px; margin: 0 0 6px 0; letter-spacing: 1px;">HISTORICAL SIGNIFICANCE</p>
+              <div style="background-color: #1e293b; border-left: 3px solid #06b6d4; padding: 10px 14px; border-radius: 4px;">
+                <p style="color: #e2e8f0; font-size: 13px; font-style: italic; margin: 0; line-height: 1.5;">$significance</p>
+              </div>
+            </div>
+
+          </div>
+        ]]></text>
+      </BalloonStyle>
+    </Style>
+
+    <Placemark>
+      <styleUrl>#historical_style</styleUrl>
+      <gx:balloonVisibility>1</gx:balloonVisibility>
+      <Point>
+        <coordinates>0,0,0</coordinates>
+      </Point>
+    </Placemark>
+  </Document>
+</kml>''';
+  }
+
+  static String _getHeaderImageURL(EventCategory category) {
+    switch (category) {
       case EventCategory.earthquake:
         return 'https://images.unsplash.com/photo-1677233860259-ce1a8e0f8498?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D';
       case EventCategory.floodStorm:
@@ -270,84 +386,96 @@ class OverlayService {
 
   static String _categoryColorHex(EventCategory category) {
     switch (category) {
-      case EventCategory.earthquake:   return '#EF4444';
-      case EventCategory.floodStorm:   return '#3B82F6';
-      case EventCategory.wildfire:     return '#F97316';
-      case EventCategory.diseaseOutbreak: return '#A855F7';
-      case EventCategory.conflict:     return '#EAB308';
+      case EventCategory.earthquake:
+        return '#EF4444';
+      case EventCategory.floodStorm:
+        return '#3B82F6';
+      case EventCategory.wildfire:
+        return '#F97316';
+      case EventCategory.diseaseOutbreak:
+        return '#A855F7';
+      case EventCategory.conflict:
+        return '#EAB308';
     }
   }
 
   static String _severityColorHex(EventSeverity severity) {
     switch (severity) {
-      case EventSeverity.critical: return '#EF4444';
-      case EventSeverity.high:     return '#F97316';
-      case EventSeverity.medium:   return '#EAB308';
-      case EventSeverity.low:      return '#22C55E';
+      case EventSeverity.critical:
+        return '#EF4444';
+      case EventSeverity.high:
+        return '#F97316';
+      case EventSeverity.medium:
+        return '#EAB308';
+      case EventSeverity.low:
+        return '#22C55E';
     }
   }
 
-  static String _getContextualInsight(EventCategory category, EventSeverity severity) {
-  switch (category) {
-    case EventCategory.earthquake:
-      switch (severity) {
-        case EventSeverity.critical:
-          return 'A critical magnitude earthquake poses immediate risk of structural collapse, tsunamis, and mass casualties. Emergency response teams are likely being deployed across the affected region.';
-        case EventSeverity.high:
-          return 'A high severity earthquake may cause significant structural damage and infrastructure disruption. Utilities and transport links in the region are likely affected.';
-        case EventSeverity.medium:
-          return 'A moderate earthquake may cause minor structural damage to older buildings. Aftershocks are possible in the coming hours and residents should stay alert.';
-        case EventSeverity.low:
-          return 'A minor seismic event unlikely to cause damage. May be felt by residents in the immediate area but poses no significant threat.';
-      }
+  static String _getContextualInsight(
+    EventCategory category,
+    EventSeverity severity,
+  ) {
+    switch (category) {
+      case EventCategory.earthquake:
+        switch (severity) {
+          case EventSeverity.critical:
+            return 'A critical magnitude earthquake poses immediate risk of structural collapse, tsunamis, and mass casualties. Emergency response teams are likely being deployed across the affected region.';
+          case EventSeverity.high:
+            return 'A high severity earthquake may cause significant structural damage and infrastructure disruption. Utilities and transport links in the region are likely affected.';
+          case EventSeverity.medium:
+            return 'A moderate earthquake may cause minor structural damage to older buildings. Aftershocks are possible in the coming hours and residents should stay alert.';
+          case EventSeverity.low:
+            return 'A minor seismic event unlikely to cause damage. May be felt by residents in the immediate area but poses no significant threat.';
+        }
 
-    case EventCategory.wildfire:
-      switch (severity) {
-        case EventSeverity.critical:
-          return 'A critical wildfire is spreading rapidly across a large area, threatening lives, property, and ecosystems. Mass evacuations are likely underway and air quality is severely impacted across multiple regions.';
-        case EventSeverity.high:
-          return 'A high severity wildfire is actively burning across significant terrain. Containment efforts are underway but the fire poses a serious threat to nearby communities and infrastructure.';
-        case EventSeverity.medium:
-          return 'A moderate wildfire is burning in the affected area. Fire crews are working on containment. Smoke may affect air quality in surrounding communities.';
-        case EventSeverity.low:
-          return 'A minor fire event detected in the region. Currently being monitored. Limited threat to surrounding areas but conditions may change if winds increase.';
-      }
+      case EventCategory.wildfire:
+        switch (severity) {
+          case EventSeverity.critical:
+            return 'A critical wildfire is spreading rapidly across a large area, threatening lives, property, and ecosystems. Mass evacuations are likely underway and air quality is severely impacted across multiple regions.';
+          case EventSeverity.high:
+            return 'A high severity wildfire is actively burning across significant terrain. Containment efforts are underway but the fire poses a serious threat to nearby communities and infrastructure.';
+          case EventSeverity.medium:
+            return 'A moderate wildfire is burning in the affected area. Fire crews are working on containment. Smoke may affect air quality in surrounding communities.';
+          case EventSeverity.low:
+            return 'A minor fire event detected in the region. Currently being monitored. Limited threat to surrounding areas but conditions may change if winds increase.';
+        }
 
-    case EventCategory.floodStorm:
-      switch (severity) {
-        case EventSeverity.critical:
-          return 'A critical flood or storm event is causing catastrophic damage to infrastructure, homes, and communities. Rescue operations are likely active and widespread displacement of residents is expected.';
-        case EventSeverity.high:
-          return 'A severe flood or storm is impacting the region with significant rainfall, strong winds, or storm surge. Road closures, power outages, and property damage are likely widespread.';
-        case EventSeverity.medium:
-          return 'A moderate flood or storm event is affecting the area. Some infrastructure disruption and localised flooding expected. Residents in low-lying areas should remain vigilant.';
-        case EventSeverity.low:
-          return 'A minor weather or flood event has been reported. Limited impact expected but conditions should be monitored as the situation may develop.';
-      }
+      case EventCategory.floodStorm:
+        switch (severity) {
+          case EventSeverity.critical:
+            return 'A critical flood or storm event is causing catastrophic damage to infrastructure, homes, and communities. Rescue operations are likely active and widespread displacement of residents is expected.';
+          case EventSeverity.high:
+            return 'A severe flood or storm is impacting the region with significant rainfall, strong winds, or storm surge. Road closures, power outages, and property damage are likely widespread.';
+          case EventSeverity.medium:
+            return 'A moderate flood or storm event is affecting the area. Some infrastructure disruption and localised flooding expected. Residents in low-lying areas should remain vigilant.';
+          case EventSeverity.low:
+            return 'A minor weather or flood event has been reported. Limited impact expected but conditions should be monitored as the situation may develop.';
+        }
 
-    case EventCategory.diseaseOutbreak:
-      switch (severity) {
-        case EventSeverity.critical:
-          return 'A critical disease outbreak is spreading rapidly across the affected region. International health agencies are likely responding. Immediate public health containment measures including quarantine and travel restrictions may be in effect.';
-        case EventSeverity.high:
-          return 'A high severity disease outbreak is placing significant strain on local healthcare systems. WHO and national health authorities are actively monitoring and responding to contain further spread.';
-        case EventSeverity.medium:
-          return 'A moderate disease outbreak has been confirmed in the region. Health authorities have issued advisories and are working to trace contacts and contain transmission.';
-        case EventSeverity.low:
-          return 'A low-level disease outbreak has been reported. Currently under surveillance by local health authorities. Risk to the broader population remains limited at this stage.';
-      }
+      case EventCategory.diseaseOutbreak:
+        switch (severity) {
+          case EventSeverity.critical:
+            return 'A critical disease outbreak is spreading rapidly across the affected region. International health agencies are likely responding. Immediate public health containment measures including quarantine and travel restrictions may be in effect.';
+          case EventSeverity.high:
+            return 'A high severity disease outbreak is placing significant strain on local healthcare systems. WHO and national health authorities are actively monitoring and responding to contain further spread.';
+          case EventSeverity.medium:
+            return 'A moderate disease outbreak has been confirmed in the region. Health authorities have issued advisories and are working to trace contacts and contain transmission.';
+          case EventSeverity.low:
+            return 'A low-level disease outbreak has been reported. Currently under surveillance by local health authorities. Risk to the broader population remains limited at this stage.';
+        }
 
-    case EventCategory.conflict:
-      switch (severity) {
-        case EventSeverity.critical:
-          return 'A critical conflict situation is causing widespread humanitarian impact. Civilian casualties, mass displacement, and infrastructure destruction are reported. International humanitarian agencies are likely mobilising emergency response.';
-        case EventSeverity.high:
-          return 'A high severity conflict is actively affecting the region with significant military or civil unrest activity. Movement restrictions and safety risks for civilians in the area are likely elevated.';
-        case EventSeverity.medium:
-          return 'A moderate conflict or civil unrest event has been reported. Localised disruption to daily life and movement is expected. Situation is being monitored by regional authorities.';
-        case EventSeverity.low:
-          return 'A low-level incident or tension has been reported in the region. Currently limited in scope but the situation should be monitored for any escalation.';
-      }
+      case EventCategory.conflict:
+        switch (severity) {
+          case EventSeverity.critical:
+            return 'A critical conflict situation is causing widespread humanitarian impact. Civilian casualties, mass displacement, and infrastructure destruction are reported. International humanitarian agencies are likely mobilising emergency response.';
+          case EventSeverity.high:
+            return 'A high severity conflict is actively affecting the region with significant military or civil unrest activity. Movement restrictions and safety risks for civilians in the area are likely elevated.';
+          case EventSeverity.medium:
+            return 'A moderate conflict or civil unrest event has been reported. Localised disruption to daily life and movement is expected. Situation is being monitored by regional authorities.';
+          case EventSeverity.low:
+            return 'A low-level incident or tension has been reported in the region. Currently limited in scope but the situation should be monitored for any escalation.';
+        }
+    }
   }
-}
 }

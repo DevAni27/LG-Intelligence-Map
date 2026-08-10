@@ -6,7 +6,6 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 
-
 class GemmaService {
   final Map<String, String> _explanationCache = {};
 
@@ -41,8 +40,6 @@ class GemmaService {
           ],
         }),
       );
-
-      
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -123,6 +120,14 @@ Rules:
 - For regions use approximate center coordinates: Asia = 34|100, Africa = 0|20, Europe = 50|10, Americas = 15|-90
 - Never add FLYTO for truly global questions only
 - Never add FLYTO:|0|0
+- You can also answer questions about famous historical events 
+  (earthquakes, tsunamis, disasters, conflicts, pandemics) 
+  using your training knowledge
+- For historical events always add FLYTO with the event location
+- For historical events also add on a new line: 
+  HISTORICAL:[full event name and year]
+- Only add HISTORICAL for specific well-known named events
+- Never add HISTORICAL for general or current event questions
 
 Question: $question''';
   }
@@ -203,7 +208,7 @@ Question: $question''';
   Future<String> eventExplain(GlobalEvent event) async {
     try {
       //checking cache first before calling the model
-      if(_explanationCache.containsKey(event.id)){
+      if (_explanationCache.containsKey(event.id)) {
         return _explanationCache[event.id]!;
       }
 
@@ -307,6 +312,32 @@ Rules:
       longitude: lon,
     );
   }
+
+  String? parseHistoricalEvent(String response) {
+    final lines = response.split('\n');
+    final line = lines.firstWhere(
+      (l) => l.trim().startsWith('HISTORICAL:'),
+      orElse: () => '',
+    );
+    if (line.isEmpty) return null;
+    return line.replaceFirst('HISTORICAL:', '').trim();
+  }
+
+  Future<String> generateHistoricalSummary(String eventName) async {
+    return await _callGemma('''
+You are Global Pulse, a world event analyst.
+Provide a structured factual summary of this historical event: $eventName
+
+Return ONLY this exact format with no extra text:
+DATE: [when it happened]
+LOCATION: [where it happened]
+SCALE: [magnitude/size/death toll if known]
+DESCRIPTION: [2-3 sentences on what happened and its impact]
+SIGNIFICANCE: [1 sentence on why it matters historically]
+''');
+  }
+
+  
 }
 
 class FlyToSuggestion {

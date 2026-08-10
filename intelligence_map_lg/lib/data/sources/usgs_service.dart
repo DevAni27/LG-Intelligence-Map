@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
 import '../models/global_event.dart';
 import '../../core/constants/app_constants.dart';
+import 'package:flutter/material.dart';
+
 
 /// Fetches earthquake data from the USGS GeoJSON API and normalizes
 /// it into [GlobalEvent] objects.
@@ -12,11 +14,14 @@ class USGSService {
   final Dio _dio;
 
   USGSService({Dio? dio})
-      : _dio = dio ??
-            Dio(BaseOptions(
+    : _dio =
+          dio ??
+          Dio(
+            BaseOptions(
               connectTimeout: const Duration(seconds: 15),
               receiveTimeout: const Duration(seconds: 15),
-            ));
+            ),
+          );
 
   /// Fetches all earthquakes from the last 24 hours.
   Future<List<GlobalEvent>> fetchDailyEarthquakes() async {
@@ -80,6 +85,7 @@ class USGSService {
 
     for (final feature in features) {
       try {
+        
         final props = feature['properties'] as Map<String, dynamic>;
         final coords = feature['geometry']['coordinates'] as List<dynamic>;
 
@@ -94,32 +100,36 @@ class USGSService {
         final alert = props['alert'] as String?;
         final id = feature['id'] as String? ?? 'usgs_$time';
 
-        events.add(GlobalEvent(
-          id: 'usgs_$id',
-          title: title,
-          description: _buildDescription(magnitude, depth, place),
-          category: EventCategory.earthquake,
-          severity: _magnitudeToSeverity(magnitude, alert),
-          latitude: latitude,
-          longitude: longitude,
-          locationName: place,
-          timestamp: DateTime.fromMillisecondsSinceEpoch(time, isUtc: true),
-          source: EventSource.usgs,
-          sourceUrl: url,
-          metadata: {
-            'magnitude': magnitude,
-            'depth_km': depth,
-            'alert': alert,
-            'felt': props['felt'],
-            'tsunami': props['tsunami'],
-          },
-        ));
+
+
+        events.add(
+          GlobalEvent(
+            id: 'usgs_$id',
+            title: title,
+            description: _buildDescription(magnitude, depth, place),
+            category: EventCategory.earthquake,
+            severity: _magnitudeToSeverity(magnitude, alert),
+            latitude: latitude,
+            longitude: longitude,
+            locationName: place,
+            timestamp: DateTime.fromMillisecondsSinceEpoch(time, isUtc: true),
+            source: EventSource.usgs,
+            sourceUrl: url,
+            metadata: {
+              'magnitude': magnitude,
+              'depth_km': depth,
+              'alert': alert,
+              'felt': props['felt'],
+              'tsunami': props['tsunami'],
+            },
+          ),
+        );
       } catch (e) {
         // Skip malformed features rather than failing the whole batch
         continue;
       }
     }
-
+    
     return events;
   }
 
@@ -150,6 +160,35 @@ class USGSService {
   String _buildDescription(double magnitude, double depth, String place) {
     return 'A magnitude $magnitude earthquake occurred at a depth of '
         '${depth.toStringAsFixed(1)} km near $place.';
+  }
+
+    //fetches all the historic events
+
+
+  Future<List<GlobalEvent>> fetchHistoricalEarthquakes({
+    required DateTime startTime,
+    required DateTime endTime,
+    double minMagnitude = 5.0,
+  }) async {
+    final start = startTime.toIso8601String().split('T')[0];
+    final end = endTime.toIso8601String().split('T')[0];
+
+    final url =
+        'https://earthquake.usgs.gov/fdsnws/event/1/query'
+        '?format=geojson'
+        '&starttime=$start'
+        '&endtime=$end'
+        '&minmagnitude=$minMagnitude'
+        '&orderby=time'
+        '&limit=100';
+
+
+    try {
+      final response = await _dio.get(url);
+      return _parseGeoJson(response.data);
+    } catch (e) {
+      return [];
+    }
   }
 }
 
