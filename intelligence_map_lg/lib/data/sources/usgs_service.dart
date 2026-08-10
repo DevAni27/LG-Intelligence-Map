@@ -129,7 +129,7 @@ class USGSService {
         continue;
       }
     }
-    debugPrint('=== PARSED RESULT: $events');
+    
     return events;
   }
 

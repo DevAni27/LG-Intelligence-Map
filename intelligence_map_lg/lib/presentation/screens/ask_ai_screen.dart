@@ -39,17 +39,22 @@ class _AskAIScreenState extends State<AskAIScreen> {
 
     //calling fly to parser
     final flytoResult = gemma.parseFlyTo(result);
+    final historicalEvent = gemma.parseHistoricalEvent(result);
 
     final cleanResult = result
         .split('\n')
-        .where((line) => !line.trim().startsWith('FLYTO:'))
+        .where(
+          (line) =>
+              !line.trim().startsWith('FLYTO:') &&
+              !line.trim().startsWith('HISTORICAL:'),
+        )
         .join('\n')
         .trim();
 
     setState(() {
       _messages.insert(
         0,
-        ChatMessage(content: cleanResult, isUser: false, flyTo: flytoResult),
+        ChatMessage(content: cleanResult, isUser: false, flyTo: flytoResult, historicalEvent: historicalEvent),
       );
       _isAiTyping = false;
     });
@@ -201,7 +206,7 @@ class _AskAIScreenState extends State<AskAIScreen> {
             if (!message.isUser && message.flyTo != null)
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
-                child: FlyToSuggestionCard(flyTo: message.flyTo!),
+                child: FlyToSuggestionCard(flyTo: message.flyTo!, historicalEvent: message.historicalEvent),
               ),
           ],
         ),

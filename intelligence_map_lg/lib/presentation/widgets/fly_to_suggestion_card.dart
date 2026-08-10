@@ -13,11 +13,15 @@ import '../../services/ssh_service.dart';
 import '../../services/tts_service.dart';
 import '../../services/kml_service.dart';
 
-
 class FlyToSuggestionCard extends StatelessWidget {
   final FlyToSuggestion flyTo;
+  final String? historicalEvent;
 
-  const FlyToSuggestionCard({super.key, required this.flyTo});
+  const FlyToSuggestionCard({
+    super.key,
+    required this.flyTo,
+    this.historicalEvent,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -27,20 +31,14 @@ class FlyToSuggestionCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.cardColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppTheme.primary.withValues(alpha: 0.3),
-        ),
+        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(
-                Icons.location_on,
-                size: 14,
-                color: AppTheme.primary,
-              ),
+              const Icon(Icons.location_on, size: 14, color: AppTheme.primary),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
@@ -65,65 +63,76 @@ class FlyToSuggestionCard extends StatelessWidget {
                 if (!ssh.isConnected) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Not connected to LG. Go to Settings to connect.'),
+                      content: Text(
+                        'Not connected to LG. Go to Settings to connect.',
+                      ),
                       backgroundColor: Colors.red,
                     ),
                   );
                   return;
                 }
 
-                //fly camera to location
+                // Fly camera to location
                 await ssh.flyTo(
                   latitude: flyTo.latitude,
                   longitude: flyTo.longitude,
                   range: 1000000,
                 );
 
-                // get events from BLoC
                 if (!context.mounted) return;
-                final state = context.read<EventsBloc>().state;
-                final events = state.filteredEvents;
-
-                final kml = context.read<KMLService>();
-
-                final kmlContent = kml.generateEventsKML(events);
-                final success = await ssh.sendKML(kmlContent);
-
-                //calculate bounding box around location
-                final bounds = LatLngBounds(
-                  LatLng(flyTo.latitude - 15, flyTo.longitude - 15),
-                  LatLng(flyTo.latitude + 15, flyTo.longitude + 15),
-                );
-
-                //get all the visible events in that region
-                final visibleEvents = TopRegionHelper.getVisibleEvents(
-                  events,
-                  bounds,
-                );
-
-                
-
-                // generate and send region overlay
-                if (!context.mounted) return;
-                String overlayKML;
                 final gemma = context.read<GemmaService>();
-                overlayKML = await OverlayService.generateRegionOverlayKML(
-                  visibleEvents,
-                  gemma,
-                );
-                await ssh.sendOverlayKML(overlayKML);
 
-                // 7. TTS
-                if (!context.mounted) return;
-                final box = Hive.box(AppConstants.settingsBox);
-                final ttsEnabled = box.get(
-                  AppConstants.keyTTSEnabled,
-                  defaultValue: true,
-                );
-                if (ttsEnabled) {
-                  final tts = context.read<TTSService>();
-                  tts.speakRegionSummary(visibleEvents);
+                String overlayKML;
+
+                if (historicalEvent != null) {
+                  // Historical event — use Gemma knowledge
+                  final summary = await gemma.generateHistoricalSummary(
+                    historicalEvent!,
+                  );
+                  overlayKML = OverlayService.generateHistoricalOverlayKml(
+                    historicalEvent!,
+                    summary,
+                    flyTo.locationName,
+                  );
+                } else {
+                  // Live region — use current events
+                  if (!context.mounted) return;
+                  final state = context.read<EventsBloc>().state;
+                  final events = state.filteredEvents;
+
+                  final kml = context.read<KMLService>();
+                  await ssh.sendKML(kml.generateEventsKML(events));
+
+                  final bounds = LatLngBounds(
+                    LatLng(flyTo.latitude - 15, flyTo.longitude - 15),
+                    LatLng(flyTo.latitude + 15, flyTo.longitude + 15),
+                  );
+
+                  final visibleEvents = TopRegionHelper.getVisibleEvents(
+                    events,
+                    bounds,
+                  );
+                  overlayKML = await OverlayService.generateRegionOverlayKML(
+                    visibleEvents,
+                    gemma,
+                  );
+
+                  // TTS for region
+                  if (!context.mounted) return;
+                  final box = Hive.box(AppConstants.settingsBox);
+                  final ttsEnabled = box.get(
+                    AppConstants.keyTTSEnabled,
+                    defaultValue: true,
+                  );
+                  if (ttsEnabled) {
+                    context.read<TTSService>().speakRegionSummary(
+                      visibleEvents,
+                    );
+                  }
                 }
+
+                if (!context.mounted) return;
+                await ssh.sendOverlayKML(overlayKML);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color.fromARGB(255, 0, 101, 114),
@@ -134,10 +143,7 @@ class FlyToSuggestionCard extends StatelessWidget {
                 ),
               ),
               icon: const Icon(Icons.send_rounded, size: 14),
-              label: const Text(
-                'Fly to on LG',
-                style: TextStyle(fontSize: 13),
-              ),
+              label: const Text('Fly to on LG', style: TextStyle(fontSize: 13)),
             ),
           ),
         ],
