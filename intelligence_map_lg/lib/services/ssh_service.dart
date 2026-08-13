@@ -3,6 +3,7 @@ import 'dart:convert';
 import '../helpers/kml_helper.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 
 /// Manages SSH connections to the Liquid Galaxy master node.
 /// Patterns matched from production LG app store applications.
@@ -201,7 +202,27 @@ class SSHService extends ChangeNotifier {
     );
   }
 
-  // LOGO OPERATIONS
+  Future<void> _uploadLogoImage() async {
+    try {
+      final byteData = await rootBundle.load('assets/images/lg_rig_logo.png');
+      final imageBytes = byteData.buffer.asUint8List();
+
+      final sftp = await _client!.sftp();
+      final file = await sftp.open(
+        '/var/www/html/lg_rig_logo.png',
+        mode:
+            SftpFileOpenMode.create |
+            SftpFileOpenMode.truncate |
+            SftpFileOpenMode.write,
+      );
+      await file.writeBytes(imageBytes);
+      await file.close();
+
+      debugPrint('Logo uploaded successfully');
+    } catch (e) {
+      debugPrint('Logo upload error: $e');
+    }
+  }
 
   /// Sends the Global Pulse logo to the leftmost slave screen.
   Future<bool> sendLogo() async {
@@ -209,16 +230,18 @@ class SSHService extends ChangeNotifier {
 
     try {
       final leftScreen = (_numberOfRigs / 2).floor() + 2;
-      final logoKml = KmlHelper.generateLogoKML();
 
+      await _uploadLogoImage();
+
+      final logoKml = KmlHelper.generateLogoKML();
       await execute(
         "echo '$logoKml' > /var/www/html/kml/slave_$leftScreen.kml",
       );
 
       await _setSlaveRefresh(leftScreen);
-
       return true;
     } catch (e) {
+      debugPrint('sendLogo error: $e');
       return false;
     }
   }
