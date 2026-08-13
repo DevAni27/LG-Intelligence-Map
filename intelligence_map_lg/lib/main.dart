@@ -11,51 +11,71 @@ import 'services/kml_service.dart';
 import 'services/tts_service.dart';
 import 'package:provider/provider.dart';
 import 'services/gemma_service.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Hive for local storage
+  FlutterNativeSplash.preserve(
+    widgetsBinding: widgetsBinding,
+  );
+
+  final nativeSplashDelay =
+      Future.delayed(const Duration(seconds: 2));
+
   await Hive.initFlutter();
 
-  // Register Hive type adapters (manual, no code generation needed)
   Hive.registerAdapter(EventSeverityAdapter());
   Hive.registerAdapter(EventCategoryAdapter());
   Hive.registerAdapter(EventSourceAdapter());
   Hive.registerAdapter(GlobalEventAdapter());
 
-  // Open settings box
   await Hive.openBox('settings_box');
 
-  // Create shared service instances
   final sshService = SSHService();
   final kmlService = KMLService();
   final eventRepository = EventRepository();
   final ttsService = TTSService();
 
+  await nativeSplashDelay;
+
   runApp(
-  MultiProvider(
-    providers: [
-      ChangeNotifierProvider<SSHService>(create: (_) => sshService),
-      Provider<KMLService>(create: (_) => kmlService),
-      Provider<TTSService>(create: (_) => ttsService),
-      Provider<GemmaService>(create: (_) => GemmaService()),
-    ],
-    child: MultiRepositoryProvider(
+    MultiProvider(
       providers: [
-        RepositoryProvider.value(value: eventRepository),
+        ChangeNotifierProvider<SSHService>(
+          create: (_) => sshService,
+        ),
+        Provider<KMLService>(
+          create: (_) => kmlService,
+        ),
+        Provider<TTSService>(
+          create: (_) => ttsService,
+        ),
+        Provider<GemmaService>(
+          create: (_) => GemmaService(),
+        ),
       ],
-      child: MultiBlocProvider(
+      child: MultiRepositoryProvider(
         providers: [
-          BlocProvider(
-            create: (context) => EventsBloc(
-              repository: eventRepository,
-            )..add(FetchAllEvents()),
+          RepositoryProvider.value(
+            value: eventRepository,
           ),
         ],
-        child: const WorldIntelligenceMapApp(),
+        child: MultiBlocProvider(
+          providers: [
+            BlocProvider(
+              create: (context) => EventsBloc(
+                repository: eventRepository,
+              )..add(FetchAllEvents()),
+            ),
+          ],
+          child: const WorldIntelligenceMapApp(),
+        ),
       ),
     ),
-  ),
-);
+  );
+
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    FlutterNativeSplash.remove();
+  });
 }
