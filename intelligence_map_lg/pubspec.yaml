@@ -3,6 +3,14 @@ description: AI-Powered World Intelligence Map for Liquid Galaxy
 publish_to: 'none'
 version: 1.0.0+1
 
+flutter_native_splash:
+  color: "#0F172A"
+  image: assets/images/lg_logo.png
+
+  android_12:
+    color: "#0F172A"
+    image: assets/images/lg_logo.png
+
 environment:
   sdk: ^3.8.0
 
@@ -11,6 +19,8 @@ dependencies:
     sdk: flutter
 
   flutter_tts: ^4.0.2
+
+  flutter_native_splash: ^2.4.7
 
   # State Management
   flutter_bloc: ^9.1.0
@@ -46,7 +56,19 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.1
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/lg_logo.png"
+  min_sdk_android: 21
+  adaptive_icon_background: "#0F172A"
+  adaptive_icon_foreground: "assets/images/lg_logo.png"
   
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/images/lg_logo.png
+    - assets/images/lg_splash_screen.png
