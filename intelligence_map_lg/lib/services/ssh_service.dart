@@ -269,6 +269,15 @@ class SSHService extends ChangeNotifier {
 
   // NAVIGATION
 
+  Future<void> flyToDefault() async {
+  await flyTo(
+    latitude: 0,
+    longitude: 0,
+    range: 25000000,  
+    tilt: 0,
+  );
+}
+
   /// Sends a flyto command to navigate the LG camera.
   Future<bool> flyTo({
     required double latitude,
