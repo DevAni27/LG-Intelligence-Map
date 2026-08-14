@@ -267,7 +267,6 @@ class OverlayService {
     String summary,
     String locationName,
   ) {
-    
     String date = '';
     String location = '';
     String scale = '';
@@ -275,26 +274,25 @@ class OverlayService {
     String significance = '';
 
     for (final line in summary.split('\n')) {
-      if (line.startsWith('DATE:')){
+      if (line.startsWith('DATE:')) {
         date = line.replaceFirst('DATE:', '').trim();
       }
-        
-      if (line.startsWith('LOCATION:')){
+
+      if (line.startsWith('LOCATION:')) {
         location = line.replaceFirst('LOCATION:', '').trim();
       }
-        
-      if (line.startsWith('SCALE:')){
+
+      if (line.startsWith('SCALE:')) {
         scale = line.replaceFirst('SCALE:', '').trim();
       }
-        
-      if (line.startsWith('DESCRIPTION:')){
+
+      if (line.startsWith('DESCRIPTION:')) {
         description = line.replaceFirst('DESCRIPTION:', '').trim();
       }
-        
-      if (line.startsWith('SIGNIFICANCE:')){
+
+      if (line.startsWith('SIGNIFICANCE:')) {
         significance = line.replaceFirst('SIGNIFICANCE:', '').trim();
       }
-        
     }
 
     return '''<?xml version="1.0" encoding="UTF-8"?>
@@ -360,6 +358,220 @@ class OverlayService {
 
     <Placemark>
       <styleUrl>#historical_style</styleUrl>
+      <gx:balloonVisibility>1</gx:balloonVisibility>
+      <Point>
+        <coordinates>0,0,0</coordinates>
+      </Point>
+    </Placemark>
+  </Document>
+</kml>''';
+  }
+
+  static String generateBriefingOverlayKml({
+    required int totalEvents,
+    required int earthquakeCount,
+    required int disasterCount,
+    required int diseaseCount,
+    required int criticalCount,
+    required int highCount,
+    required int mediumCount,
+    required int lowCount,
+    required List<MapEntry<String, int>> topRegions,
+    required String dateTime,
+  }) {
+    // Build top regions rows
+    final regionRows = topRegions
+        .take(5)
+        .map(
+          (r) =>
+              '''
+    <tr>
+      <td style="color: #94a3b8; font-size: 13px; padding: 4px 0;">
+        ${r.key}
+      </td>
+      <td style="color: #ffffff; font-size: 13px; padding: 4px 0; 
+          text-align: right; font-weight: bold;">
+        ${r.value}
+      </td>
+    </tr>
+  ''',
+        )
+        .join('');
+
+    return '''<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2"
+     xmlns:gx="http://www.google.com/kml/ext/2.2">
+  <Document>
+    <Style id="briefing_style">
+      <BalloonStyle>
+        <bgColor>ff0f172a</bgColor>
+        <text><![CDATA[
+          <div style="font-family: Arial, sans-serif; width: 520px; 
+              background-color: #0f172a; color: #ffffff; 
+              border-radius: 12px; overflow: hidden;">
+
+            <!-- Header -->
+            <div style="background: linear-gradient(135deg, #06b6d4, #0284c7); 
+                padding: 16px 20px;">
+              <p style="color: #ffffff; font-size: 11px; margin: 0 0 4px 0; 
+                  letter-spacing: 2px; opacity: 0.8;">LIVE BROADCAST</p>
+              <h2 style="color: #ffffff; font-size: 22px; margin: 0; 
+                  font-weight: bold;">🌍 Daily Global Pulse</h2>
+              <p style="color: #e0f7ff; font-size: 12px; margin: 4px 0 0 0;">
+                AI-Generated Briefing · $dateTime
+              </p>
+            </div>
+
+            <!-- Total Events -->
+            <div style="padding: 14px 20px 10px 20px; 
+                border-bottom: 1px solid #1e293b;">
+              <p style="color: #64748b; font-size: 11px; margin: 0 0 8px 0; 
+                  letter-spacing: 1px;">ACTIVE EVENTS WORLDWIDE</p>
+              <p style="color: #06b6d4; font-size: 36px; font-weight: bold; 
+                  margin: 0; line-height: 1;">$totalEvents</p>
+            </div>
+
+            <!-- Category Breakdown -->
+            <div style="padding: 12px 20px; border-bottom: 1px solid #1e293b;">
+              <p style="color: #64748b; font-size: 11px; margin: 0 0 8px 0; 
+                  letter-spacing: 1px;">EVENT BREAKDOWN</p>
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="padding: 4px 0;">
+                    <span style="display: inline-block; width: 10px; 
+                        height: 10px; border-radius: 50%; 
+                        background-color: #EF4444; margin-right: 8px;">
+                    </span>
+                    <span style="color: #94a3b8; font-size: 13px;">
+                      Earthquakes
+                    </span>
+                  </td>
+                  <td style="color: #ffffff; font-size: 13px; 
+                      text-align: right; font-weight: bold; padding: 4px 0;">
+                    $earthquakeCount
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 4px 0;">
+                    <span style="display: inline-block; width: 10px; 
+                        height: 10px; border-radius: 50%; 
+                        background-color: #F97316; margin-right: 8px;">
+                    </span>
+                    <span style="color: #94a3b8; font-size: 13px;">
+                      Disasters
+                    </span>
+                  </td>
+                  <td style="color: #ffffff; font-size: 13px; 
+                      text-align: right; font-weight: bold; padding: 4px 0;">
+                    $disasterCount
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 4px 0;">
+                    <span style="display: inline-block; width: 10px; 
+                        height: 10px; border-radius: 50%; 
+                        background-color: #A855F7; margin-right: 8px;">
+                    </span>
+                    <span style="color: #94a3b8; font-size: 13px;">
+                      Disease Alerts
+                    </span>
+                  </td>
+                  <td style="color: #ffffff; font-size: 13px; 
+                      text-align: right; font-weight: bold; padding: 4px 0;">
+                    $diseaseCount
+                  </td>
+                </tr>
+              </table>
+            </div>
+
+            <!-- Severity Breakdown -->
+            <div style="padding: 12px 20px; border-bottom: 1px solid #1e293b;">
+              <p style="color: #64748b; font-size: 11px; margin: 0 0 8px 0; 
+                  letter-spacing: 1px;">SEVERITY BREAKDOWN</p>
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="padding: 3px 0;">
+                    <span style="display: inline-block; width: 10px; 
+                        height: 10px; border-radius: 50%; 
+                        background-color: #EF4444; margin-right: 8px;">
+                    </span>
+                    <span style="color: #94a3b8; font-size: 13px;">Critical</span>
+                  </td>
+                  <td style="color: #EF4444; font-size: 13px; 
+                      text-align: right; font-weight: bold; padding: 3px 0;">
+                    $criticalCount
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 3px 0;">
+                    <span style="display: inline-block; width: 10px; 
+                        height: 10px; border-radius: 50%; 
+                        background-color: #F97316; margin-right: 8px;">
+                    </span>
+                    <span style="color: #94a3b8; font-size: 13px;">High</span>
+                  </td>
+                  <td style="color: #F97316; font-size: 13px; 
+                      text-align: right; font-weight: bold; padding: 3px 0;">
+                    $highCount
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 3px 0;">
+                    <span style="display: inline-block; width: 10px; 
+                        height: 10px; border-radius: 50%; 
+                        background-color: #EAB308; margin-right: 8px;">
+                    </span>
+                    <span style="color: #94a3b8; font-size: 13px;">Medium</span>
+                  </td>
+                  <td style="color: #EAB308; font-size: 13px; 
+                      text-align: right; font-weight: bold; padding: 3px 0;">
+                    $mediumCount
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 3px 0;">
+                    <span style="display: inline-block; width: 10px; 
+                        height: 10px; border-radius: 50%; 
+                        background-color: #22C55E; margin-right: 8px;">
+                    </span>
+                    <span style="color: #94a3b8; font-size: 13px;">Low</span>
+                  </td>
+                  <td style="color: #22C55E; font-size: 13px; 
+                      text-align: right; font-weight: bold; padding: 3px 0;">
+                    $lowCount
+                  </td>
+                </tr>
+              </table>
+            </div>
+
+            <!-- Top Regions -->
+            <div style="padding: 12px 20px; border-bottom: 1px solid #1e293b;">
+              <p style="color: #64748b; font-size: 11px; margin: 0 0 8px 0; 
+                  letter-spacing: 1px;">TOP ACTIVE REGIONS</p>
+              <table style="width: 100%; border-collapse: collapse;">
+                $regionRows
+              </table>
+            </div>
+
+            <!-- AI Briefing Footer -->
+            <div style="padding: 12px 20px; 
+                background-color: #1e293b; text-align: center;">
+              <p style="color: #06b6d4; font-size: 12px; margin: 0; 
+                  font-style: italic;">
+                ✦ AI Briefing In Progress...
+              </p>
+              <p style="color: #475569; font-size: 11px; margin: 4px 0 0 0;">
+                Powered by Google Gemma 4 via Global Pulse
+              </p>
+            </div>
+
+          </div>
+        ]]></text>
+      </BalloonStyle>
+    </Style>
+
+    <Placemark>
+      <styleUrl>#briefing_style</styleUrl>
       <gx:balloonVisibility>1</gx:balloonVisibility>
       <Point>
         <coordinates>0,0,0</coordinates>
