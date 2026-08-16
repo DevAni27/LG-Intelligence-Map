@@ -30,7 +30,6 @@ class MapScreen extends StatefulWidget {
 class _MapScreenState extends State<MapScreen> {
   final MapController _mapController = MapController();
 
-  // Controls visibility of the info card
   bool _showInfoCard = false;
 
   @override
@@ -40,10 +39,9 @@ class _MapScreenState extends State<MapScreen> {
         builder: (context, state) {
           return Column(
             children: [
-              // Header on solid background
               _buildHeader(context, state),
 
-              // Map inside clipped container — cannot bleed outside
+              // Map inside container
               Expanded(
                 child: ClipRRect(
                   borderRadius: BorderRadius.zero,
@@ -55,7 +53,6 @@ class _MapScreenState extends State<MapScreen> {
                         child: Stack(
                           clipBehavior: Clip.hardEdge,
                           children: [
-                            // ── Map ──────────────────────────────
                             FlutterMap(
                               mapController: _mapController,
                               options: MapOptions(
@@ -104,14 +101,12 @@ class _MapScreenState extends State<MapScreen> {
                               ],
                             ),
 
-                            // ── Zoom controls ─────────────────────
                             Positioned(
                               right: 14,
                               bottom: 80,
                               child: _buildRightControls(),
                             ),
 
-                            // ── Info card overlay ─────────────────
                             if (_showInfoCard)
                               Positioned.fill(
                                 child: GestureDetector(
@@ -130,7 +125,6 @@ class _MapScreenState extends State<MapScreen> {
                                 child: _buildInfoCard(context),
                               ),
 
-                            // ── Fly to button ─────────────────────
                             Positioned(
                               bottom: 16,
                               left: 16,
@@ -151,7 +145,6 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  // ── Rich header with glassmorphism background ──────────────
   Widget _buildHeader(BuildContext context, EventsState state) {
     return Container(
       decoration: BoxDecoration(
@@ -169,7 +162,6 @@ class _MapScreenState extends State<MapScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Title row with event count badge
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -246,7 +238,6 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  // ── Zoom controls + info button on right side ─────────────
   Widget _buildRightControls() {
     return Column(
       children: [
@@ -273,7 +264,6 @@ class _MapScreenState extends State<MapScreen> {
           },
         ),
         const SizedBox(height: 10),
-        // Reset to world view
         _buildMapControlButton(
           icon: Icons.public_rounded,
           onTap: () {
@@ -311,7 +301,6 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  // ── Info card — explains map features to the user ─────────
   Widget _buildInfoCard(BuildContext context) {
     return Material(
       color: Colors.transparent,
@@ -384,7 +373,6 @@ class _MapScreenState extends State<MapScreen> {
                       ),
                       const SizedBox(height: 14),
 
-                      // Clusters section
                       _buildInfoSection(
                         icon: Icons.bubble_chart_rounded,
                         iconColor: const Color(0xFFEAB308),
@@ -397,7 +385,6 @@ class _MapScreenState extends State<MapScreen> {
                       ),
                       const SizedBox(height: 14),
 
-                      // Color legend section
                       _buildInfoSection(
                         icon: Icons.palette_outlined,
                         iconColor: AppTheme.diseaseColor,
@@ -409,7 +396,6 @@ class _MapScreenState extends State<MapScreen> {
                       ),
                       const SizedBox(height: 14),
 
-                      // LG button section
                       _buildInfoSection(
                         icon: Icons.send_rounded,
                         iconColor: AppTheme.primary,
@@ -423,7 +409,6 @@ class _MapScreenState extends State<MapScreen> {
                   ),
                 ),
               ),
-              // Markers section
             ],
           ),
         ),
@@ -540,7 +525,6 @@ class _MapScreenState extends State<MapScreen> {
             child: GestureDetector(
               onTap: () {
                 if (category == null) {
-                  // "All" selected — clear filters
                   context.read<EventsBloc>().add(const FilterByCategory({}));
                 } else {
                   final updated = Set<EventCategory>.from(
@@ -648,7 +632,6 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  /// Sends the current map view and events to the LG rig.
   Future<void> _sendToLG(BuildContext context, EventsState state) async {
     final ssh = context.read<SSHService>();
     final kml = context.read<KMLService>();
@@ -774,9 +757,7 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
-  /// Converts flutter_map zoom level to a Google Earth range value.
   double _zoomToRange(double zoom) {
-    // Rough approximation: GE range ≈ 35000000 / 2^zoom
     return 35000000 / (1 << zoom.round());
   }
 }
