@@ -97,6 +97,10 @@ class _DailyPulseCardState extends State<DailyPulseCard> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please connect to the RIG first...')),
       );
+      setState(() {
+      _isLoading = false;
+      _isPlaying = false;
+    });
     }
 
     // Start TTS

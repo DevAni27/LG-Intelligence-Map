@@ -251,7 +251,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             icon: Icons.travel_explore,
             title: 'Explore the world',
             description:
-                'Open Map, choose a location and send the view to Liquid Galaxy.',
+                'Open Map, choose a location and send the view to Liquid Galaxy. Press the i button on the map to learn more.',
           ),
 
           const Spacer(),
