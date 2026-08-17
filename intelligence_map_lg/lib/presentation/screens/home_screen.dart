@@ -11,6 +11,7 @@ import '../widgets/connection_status.dart';
 import '../widgets/top_regions_card.dart';
 import '../../core/utils/top_region_helper.dart';
 import '../widgets/daily_pulse_card.dart';
+import '../widgets/shimmer_loader.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -20,6 +21,9 @@ class HomeScreen extends StatelessWidget {
     return SafeArea(
       child: BlocBuilder<EventsBloc, EventsState>(
         builder: (context, state) {
+          if (state.status == EventsStatus.loading && state.totalEvents == 0) {
+            return _buildLoadingState();
+          }
           return RefreshIndicator(
             color: AppTheme.primary,
             backgroundColor: const Color(0xFF0D1421),
@@ -435,6 +439,143 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return CustomScrollView(
+      slivers: [
+        // Header skeleton
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+            child: Row(
+              children: [
+                ShimmerBox(width: 38, height: 38, borderRadius: 10),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ShimmerBox(width: 160, height: 24, borderRadius: 8),
+                    const SizedBox(height: 6),
+                    ShimmerBox(width: 220, height: 13, borderRadius: 6),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // Hero banner skeleton
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+            child: ShimmerBox(
+              width: double.infinity,
+              height: 130,
+              borderRadius: 22,
+            ),
+          ),
+        ),
+
+        // Stat grid skeleton
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+            child: GridView.count(
+              crossAxisCount: 2,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              mainAxisSpacing: 10,
+              crossAxisSpacing: 10,
+              childAspectRatio: 1.45,
+              children: List.generate(
+                4,
+                (_) => ShimmerBox(
+                  width: double.infinity,
+                  height: double.infinity,
+                  borderRadius: 18,
+                ),
+              ),
+            ),
+          ),
+        ),
+
+        // Daily pulse skeleton
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+            child: ShimmerBox(
+              width: double.infinity,
+              height: 82,
+              borderRadius: 20,
+            ),
+          ),
+        ),
+
+        // Severity skeleton
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+            child: ShimmerBox(
+              width: double.infinity,
+              height: 160,
+              borderRadius: 20,
+            ),
+          ),
+        ),
+
+        // Events label skeleton
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 28, 20, 12),
+            child: ShimmerBox(width: 130, height: 20, borderRadius: 8),
+          ),
+        ),
+
+        // Event card skeletons
+        SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (_, __) => Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+              child: ShimmerBox(
+                width: double.infinity,
+                height: 72,
+                borderRadius: 18,
+              ),
+            ),
+            childCount: 5,
+          ),
+        ),
+
+        // Loading message at bottom
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 1.5,
+                    color: AppTheme.primary.withValues(alpha: 0.5),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  'Fetching live events from USGS, NASA & WHO...',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.3),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -52,6 +52,8 @@ dependencies:
   #http
   http: ^1.2.0
 
+  shimmer: ^3.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
