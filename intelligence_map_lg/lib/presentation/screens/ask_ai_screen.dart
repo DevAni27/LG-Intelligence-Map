@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/models/chat_message.dart';
-import '../../logic/blocs/events/events_bloc.dart';
+import '../../presentation/blocs/events/events_bloc.dart';
 import '../../services/gemma_service.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../widgets/fly_to_suggestion_card.dart';

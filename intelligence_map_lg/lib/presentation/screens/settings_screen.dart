@@ -5,9 +5,9 @@ import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/models/global_event.dart';
 import '../../data/repositories/event_repository.dart';
-import '../../logic/blocs/events/events_bloc.dart';
-import '../../logic/blocs/events/events_event.dart';
-import '../../logic/blocs/events/events_state.dart';
+import '../../presentation/blocs/events/events_bloc.dart';
+import '../../presentation/blocs/events/events_event.dart';
+import '../../presentation/blocs/events/events_state.dart';
 import '../../services/ssh_service.dart';
 
 class SettingsScreen extends StatefulWidget {

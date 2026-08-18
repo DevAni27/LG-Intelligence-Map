@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'app.dart';
-import 'data/models/global_event_adapter.dart';
+import 'data/adapters/global_event_adapter.dart';
 import 'data/repositories/event_repository.dart';
-import 'logic/blocs/events/events_bloc.dart';
-import 'logic/blocs/events/events_event.dart';
+import 'presentation/blocs/events/events_bloc.dart';
+import 'presentation/blocs/events/events_event.dart';
 import 'services/ssh_service.dart';
 import 'services/kml_service.dart';
 import 'services/tts_service.dart';
@@ -16,12 +16,9 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 void main() async {
   final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
 
-  FlutterNativeSplash.preserve(
-    widgetsBinding: widgetsBinding,
-  );
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
-  final nativeSplashDelay =
-      Future.delayed(const Duration(seconds: 2));
+  final nativeSplashDelay = Future.delayed(const Duration(seconds: 2));
 
   await Hive.initFlutter();
 
@@ -40,33 +37,23 @@ void main() async {
   await nativeSplashDelay;
 
   runApp(
+    // Dependency Injection — all services registered here
+    // and accessed via context.read<ServiceName>() throughout the app
     MultiProvider(
       providers: [
-        ChangeNotifierProvider<SSHService>(
-          create: (_) => sshService,
-        ),
-        Provider<KMLService>(
-          create: (_) => kmlService,
-        ),
-        Provider<TTSService>(
-          create: (_) => ttsService,
-        ),
-        Provider<GemmaService>(
-          create: (_) => GemmaService(),
-        ),
+        ChangeNotifierProvider<SSHService>(create: (_) => sshService),
+        Provider<KMLService>(create: (_) => kmlService),
+        Provider<TTSService>(create: (_) => ttsService),
+        Provider<GemmaService>(create: (_) => GemmaService()),
       ],
       child: MultiRepositoryProvider(
-        providers: [
-          RepositoryProvider.value(
-            value: eventRepository,
-          ),
-        ],
+        providers: [RepositoryProvider.value(value: eventRepository)],
         child: MultiBlocProvider(
           providers: [
             BlocProvider(
-              create: (context) => EventsBloc(
-                repository: eventRepository,
-              )..add(FetchAllEvents()),
+              create: (context) =>
+                  EventsBloc(repository: eventRepository)
+                    ..add(FetchAllEvents()),
             ),
           ],
           child: const WorldIntelligenceMapApp(),
