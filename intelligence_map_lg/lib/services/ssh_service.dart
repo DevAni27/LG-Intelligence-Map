@@ -148,7 +148,7 @@ class SSHService extends ChangeNotifier {
       await file.close();
       return true;
     } catch (e) {
-      debugPrint('sendOverlayKML error: $e');
+
       return false;
     }
   }
@@ -173,6 +173,7 @@ class SSHService extends ChangeNotifier {
       await execute('echo "" > /var/www/html/kmls.txt');
       await execute('echo "" > /tmp/query.txt');
       await execute('rm -f /var/www/html/global_pulse.kml');
+      await clearoverlayKML('');
       return true;
     } catch (e) {
       return false;
@@ -218,9 +219,8 @@ class SSHService extends ChangeNotifier {
       await file.writeBytes(imageBytes);
       await file.close();
 
-      debugPrint('Logo uploaded successfully');
     } catch (e) {
-      debugPrint('Logo upload error: $e');
+      // Silently ignored
     }
   }
 
@@ -241,7 +241,6 @@ class SSHService extends ChangeNotifier {
       await _setSlaveRefresh(leftScreen);
       return true;
     } catch (e) {
-      debugPrint('sendLogo error: $e');
       return false;
     }
   }

@@ -31,7 +31,7 @@ class OverlayService {
       <BalloonStyle>
         <bgColor>ff0f172a</bgColor>
         <text><![CDATA[
-          <div style="font-family: Arial, sans-serif; width: 520px; background-color: #0f172a; color: #ffffff; border-radius: 12px; overflow: hidden;">
+          <div style="font-family: Arial, sans-serif; width: 900px; background-color: #0f172a; color: #ffffff; border-radius: 12px; overflow: hidden;">
             
             <!-- Header Image -->
             <div style="width: 100%; height: 200px; overflow: hidden;">
@@ -40,25 +40,25 @@ class OverlayService {
 
             <!-- Category + Severity Row -->
             <div style="padding: 16px 20px 8px 20px; display: flex; gap: 10px;">
-              <span style="background-color: ${catColor}22; color: $catColor; border: 1px solid $catColor; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: bold;">
+              <span style="background-color: ${catColor}22; color: $catColor; border: 1px solid $catColor; padding: 4px 10px; border-radius: 6px; font-size: 18px; font-weight: bold;">
                 $categoryLabel
               </span>
-              <span style="background-color: ${sevColor}22; color: $sevColor; border: 1px solid $sevColor; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: bold;">
+              <span style="background-color: ${sevColor}22; color: $sevColor; border: 1px solid $sevColor; padding: 4px 10px; border-radius: 6px; font-size: 18px; font-weight: bold;">
                 $severityLabel
               </span>
             </div>
 
             <!-- Title -->
             <div style="padding: 4px 20px 12px 20px;">
-              <h2 style="color: #ffffff; font-size: 20px; margin: 0; line-height: 1.3;">
+              <h2 style="color: #ffffff; font-size: 30px; margin: 0; line-height: 1.3;">
                 ${event.title}
               </h2>
             </div>
 
             <!-- Location + Date -->
             <div style="padding: 0 20px 12px 20px; display: flex; justify-content: space-between;">
-              <span style="color: #94a3b8; font-size: 13px;">📍 ${event.locationName}</span>
-              <span style="color: #94a3b8; font-size: 13px;">$date</span>
+              <span style="color: #94a3b8; font-size: 20px;">📍 ${event.locationName}</span>
+              <span style="color: #94a3b8; font-size: 20px;">$date</span>
             </div>
 
             <!-- Divider -->
@@ -66,7 +66,7 @@ class OverlayService {
 
             <!-- Description -->
             <div style="padding: 12px 20px;">
-              <p style="color: #cbd5e1; font-size: 14px; line-height: 1.6; margin: 0;">
+              <p style="color: #cbd5e1; font-size: 20px; line-height: 1.6; margin: 0;">
                 $description
               </p>
             </div>
@@ -75,8 +75,8 @@ class OverlayService {
             <div style="border-top: 1px solid #1e293b; margin: 0 20px;"></div>
 
             <div style="background-color: #1e293b; padding: 12px 16px; border-left: 3px solid $catColor; margin: 0 20px 12px 20px; border-radius: 4px;">
-              <p style="color: #94a3b8; font-size: 11px; margin: 0 0 4px 0;">SITUATIONAL INSIGHT</p>
-              <p style="color: #e2e8f0; font-size: 13px; line-height: 1.5; margin: 0;">$insight</p>
+              <p style="color: #94a3b8; font-size: 16px; margin: 0 0 4px 0;">SITUATIONAL INSIGHT</p>
+              <p style="color: #e2e8f0; font-size: 20px; line-height: 1.5; margin: 0;">$insight</p>
             </div>
 
             <!-- Divider -->
@@ -84,8 +84,8 @@ class OverlayService {
 
             <!-- Source + Coordinates -->
             <div style="padding: 12px 20px; display: flex; justify-content: space-between;">
-              <span style="color: #64748b; font-size: 12px;">Source: $source</span>
-              <span style="color: #64748b; font-size: 12px;">$lat, $lon</span>
+              <span style="color: #64748b; font-size: 18px;">Source: $source</span>
+              <span style="color: #64748b; font-size: 18px;">$lat, $lon</span>
             </div>
 
           </div>
@@ -140,9 +140,9 @@ class OverlayService {
       <tr>
         <td style="padding: 6px 0;">
           <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: ${row.$3}; margin-right: 8px;"></span>
-          <span style="color: #94a3b8; font-size: 13px;">${row.$2}</span>
+          <span style="color: #94a3b8; font-size: 20px;">${row.$2}</span>
         </td>
-        <td style="padding: 6px 0; text-align: right; color: #ffffff; font-size: 13px; font-weight: bold;">$count</td>
+        <td style="padding: 6px 0; text-align: right; color: #ffffff; font-size: 20px; font-weight: bold;">$count</td>
       </tr>''';
             })
             .join('');
@@ -161,9 +161,9 @@ class OverlayService {
       <tr>
         <td style="padding: 6px 0;">
           <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: ${row.$3}; margin-right: 8px;"></span>
-          <span style="color: #94a3b8; font-size: 13px;">${row.$2}</span>
+          <span style="color: #94a3b8; font-size: 20px;">${row.$2}</span>
         </td>
-        <td style="padding: 6px 0; text-align: right; color: #ffffff; font-size: 13px; font-weight: bold;">$count</td>
+        <td style="padding: 6px 0; text-align: right; color: #ffffff; font-size: 20px; font-weight: bold;">$count</td>
       </tr>''';
             })
             .join('');
@@ -172,13 +172,13 @@ class OverlayService {
     final topEventHtml = topEvent != null
         ? '''
     <div style="background-color: #1e293b; border-radius: 8px; padding: 12px 14px; margin-bottom: 16px;">
-      <p style="color: #64748b; font-size: 11px; margin: 0 0 6px 0; letter-spacing: 1px;">TOP EVENT IN REGION</p>
-      <p style="color: #ffffff; font-size: 14px; font-weight: bold; margin: 0 0 6px 0;">${topEvent.title}</p>
+      <p style="color: #64748b; font-size: 16px; margin: 0 0 6px 0; letter-spacing: 1px;">TOP EVENT IN REGION</p>
+      <p style="color: #ffffff; font-size: 20px; font-weight: bold; margin: 0 0 6px 0;">${topEvent.title}</p>
       <div style="display: flex; gap: 8px;">
-        <span style="background-color: ${_severityColorHex(topEvent.severity)}22; color: ${_severityColorHex(topEvent.severity)}; border: 1px solid ${_severityColorHex(topEvent.severity)}; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">
+        <span style="background-color: ${_severityColorHex(topEvent.severity)}22; color: ${_severityColorHex(topEvent.severity)}; border: 1px solid ${_severityColorHex(topEvent.severity)}; padding: 2px 8px; border-radius: 4px; font-size: 16px; font-weight: bold;">
           ${topEvent.severity.name.toUpperCase()}
         </span>
-        <span style="color: #64748b; font-size: 12px; line-height: 20px;">${topEvent.locationName}</span>
+        <span style="color: #64748b; font-size: 18px; line-height: 20px;">${topEvent.locationName}</span>
       </div>
     </div>'''
         : '';
@@ -191,7 +191,7 @@ class OverlayService {
       <BalloonStyle>
         <bgColor>ff0f172a</bgColor>
         <text><![CDATA[
-          <div style="font-family: Arial, sans-serif; width: 520px; background-color: #0f172a; color: #ffffff; border-radius: 12px; overflow: hidden;">
+          <div style="font-family: Arial, sans-serif; width: 900px; background-color: #0f172a; color: #ffffff; border-radius: 12px; overflow: hidden;">
 
             <!-- Header Image -->
             <div style="width: 100%; height: 160px; overflow: hidden; position: relative;">
@@ -201,9 +201,9 @@ class OverlayService {
 
             <!-- Title -->
             <div style="padding: 14px 20px 4px 20px;">
-              <p style="color: #c5c6c7; font-size: 11px; margin: 0 0 4px 0; letter-spacing: 1px;">REGION OVERVIEW</p>
-              <h2 style="color: #ffffff; font-size: 20px; margin: 0 0 4px 0;">Current Map View</h2>
-              <p style="color: #94a3b8; font-size: 13px; margin: 0;">${visibleEvents.length} active events in this area</p>
+              <p style="color: #c5c6c7; font-size: 16px; margin: 0 0 4px 0; letter-spacing: 1px;">REGION OVERVIEW</p>
+              <h2 style="color: #ffffff; font-size: 30px; margin: 0 0 4px 0;">Current Map View</h2>
+              <p style="color: #94a3b8; font-size: 20px; margin: 0;">${visibleEvents.length} active events in this area</p>
             </div>
 
             <!-- Divider -->
@@ -216,7 +216,7 @@ class OverlayService {
 
             <!-- Event Breakdown -->
             <div style="padding: 0 20px 12px 20px;">
-              <p style="color: #c5c6c7; font-size: 11px; margin: 0 0 8px 0; letter-spacing: 1px;">EVENT BREAKDOWN</p>
+              <p style="color: #c5c6c7; font-size: 16px; margin: 0 0 8px 0; letter-spacing: 1px;">EVENT BREAKDOWN</p>
               <table style="width: 100%; border-collapse: collapse;">
                 $categoryRows
               </table>
@@ -227,7 +227,7 @@ class OverlayService {
 
             <!-- Severity Breakdown -->
             <div style="padding: 0 20px 12px 20px;">
-              <p style="color: #c5c6c7; font-size: 11px; margin: 0 0 8px 0; letter-spacing: 1px;">SEVERITY BREAKDOWN</p>
+              <p style="color: #c5c6c7; font-size: 16px; margin: 0 0 8px 0; letter-spacing: 1px;">SEVERITY BREAKDOWN</p>
               <table style="width: 100%; border-collapse: collapse;">
                 $severityRows
               </table>
@@ -238,9 +238,9 @@ class OverlayService {
 
             <!-- AI Summary Placeholder -->
             <div style="padding: 0 20px 16px 20px;">
-              <p style="color: #c5c6c7; font-size: 11px; margin: 0 0 8px 0; letter-spacing: 1px;">AI REGIONAL SUMMARY</p>
+              <p style="color: #c5c6c7; font-size: 16px; margin: 0 0 8px 0; letter-spacing: 1px;">AI REGIONAL SUMMARY</p>
               <div style="background-color: #1e293b; border-radius: 8px; padding: 12px 14px; border-left: 3px solid #06b6d4;">
-                <p style="color: #a9aaab; font-size: 13px; font-style: italic; margin: 0;">
+                <p style="color: #a9aaab; font-size: 20px; font-style: italic; margin: 0;">
                   $gemmaSummary
                 </p>
               </div>
@@ -303,30 +303,30 @@ class OverlayService {
       <BalloonStyle>
         <bgColor>ff0f172a</bgColor>
         <text><![CDATA[
-          <div style="font-family: Arial, sans-serif; width: 520px; background-color: #0f172a; color: #ffffff; border-radius: 12px; overflow: hidden;">
+          <div style="font-family: Arial, sans-serif; width: 900px; background-color: #0f172a; color: #ffffff; border-radius: 12px; overflow: hidden;">
 
             <!-- Header -->
             <div style="background: linear-gradient(135deg, #1e293b, #0f172a); padding: 20px; border-bottom: 2px solid #06b6d4;">
-              <p style="color: #06b6d4; font-size: 11px; margin: 0 0 6px 0; letter-spacing: 2px;">HISTORICAL EVENT</p>
-              <h2 style="color: #ffffff; font-size: 20px; margin: 0; line-height: 1.3;">$eventName</h2>
-              <p style="color: #94a3b8; font-size: 13px; margin: 8px 0 0 0;">📍 $locationName</p>
+              <p style="color: #06b6d4; font-size: 16px; margin: 0 0 6px 0; letter-spacing: 2px;">HISTORICAL EVENT</p>
+              <h2 style="color: #ffffff; font-size: 30px; margin: 0; line-height: 1.3;">$eventName</h2>
+              <p style="color: #94a3b8; font-size: 20px; margin: 8px 0 0 0;">📍 $locationName</p>
             </div>
 
             <!-- Key Facts -->
             <div style="padding: 16px 20px; background-color: #1e293b; margin: 12px 20px; border-radius: 8px;">
-              <p style="color: #64748b; font-size: 11px; margin: 0 0 8px 0; letter-spacing: 1px;">KEY FACTS</p>
+              <p style="color: #64748b; font-size: 16px; margin: 0 0 8px 0; letter-spacing: 1px;">KEY FACTS</p>
               <table style="width: 100%; border-collapse: collapse;">
                 <tr>
-                  <td style="color: #94a3b8; font-size: 12px; padding: 4px 0; width: 40%;">Date</td>
-                  <td style="color: #ffffff; font-size: 12px; padding: 4px 0;">$date</td>
+                  <td style="color: #94a3b8; font-size: 18px; padding: 4px 0; width: 40%;">Date</td>
+                  <td style="color: #ffffff; font-size: 18px; padding: 4px 0;">$date</td>
                 </tr>
                 <tr>
-                  <td style="color: #94a3b8; font-size: 12px; padding: 4px 0;">Location</td>
-                  <td style="color: #ffffff; font-size: 12px; padding: 4px 0;">$location</td>
+                  <td style="color: #94a3b8; font-size: 18px; padding: 4px 0;">Location</td>
+                  <td style="color: #ffffff; font-size: 18px; padding: 4px 0;">$location</td>
                 </tr>
                 <tr>
-                  <td style="color: #94a3b8; font-size: 12px; padding: 4px 0;">Scale</td>
-                  <td style="color: #ffffff; font-size: 12px; padding: 4px 0;">$scale</td>
+                  <td style="color: #94a3b8; font-size: 18px; padding: 4px 0;">Scale</td>
+                  <td style="color: #ffffff; font-size: 18px; padding: 4px 0;">$scale</td>
                 </tr>
               </table>
             </div>
@@ -336,8 +336,8 @@ class OverlayService {
 
             <!-- Description -->
             <div style="padding: 12px 20px;">
-              <p style="color: #64748b; font-size: 11px; margin: 0 0 6px 0; letter-spacing: 1px;">WHAT HAPPENED</p>
-              <p style="color: #cbd5e1; font-size: 14px; line-height: 1.6; margin: 0;">$description</p>
+              <p style="color: #64748b; font-size: 16px; margin: 0 0 6px 0; letter-spacing: 1px;">WHAT HAPPENED</p>
+              <p style="color: #cbd5e1; font-size: 20px; line-height: 1.6; margin: 0;">$description</p>
             </div>
 
             <!-- Divider -->
@@ -345,9 +345,9 @@ class OverlayService {
 
             <!-- Significance -->
             <div style="padding: 12px 20px 16px 20px;">
-              <p style="color: #64748b; font-size: 11px; margin: 0 0 6px 0; letter-spacing: 1px;">HISTORICAL SIGNIFICANCE</p>
+              <p style="color: #64748b; font-size: 16px; margin: 0 0 6px 0; letter-spacing: 1px;">HISTORICAL SIGNIFICANCE</p>
               <div style="background-color: #1e293b; border-left: 3px solid #06b6d4; padding: 10px 14px; border-radius: 4px;">
-                <p style="color: #e2e8f0; font-size: 13px; font-style: italic; margin: 0; line-height: 1.5;">$significance</p>
+                <p style="color: #e2e8f0; font-size: 20px; font-style: italic; margin: 0; line-height: 1.5;">$significance</p>
               </div>
             </div>
 
@@ -386,10 +386,10 @@ class OverlayService {
           (r) =>
               '''
     <tr>
-      <td style="color: #94a3b8; font-size: 13px; padding: 4px 0;">
+      <td style="color: #94a3b8; font-size: 20px; padding: 4px 0;">
         ${r.key}
       </td>
-      <td style="color: #ffffff; font-size: 13px; padding: 4px 0; 
+      <td style="color: #ffffff; font-size: 20px; padding: 4px 0; 
           text-align: right; font-weight: bold;">
         ${r.value}
       </td>
@@ -406,18 +406,18 @@ class OverlayService {
       <BalloonStyle>
         <bgColor>ff0f172a</bgColor>
         <text><![CDATA[
-          <div style="font-family: Arial, sans-serif; width: 520px; 
+          <div style="font-family: Arial, sans-serif; width: 900px; 
               background-color: #0f172a; color: #ffffff; 
               border-radius: 12px; overflow: hidden;">
 
             <!-- Header -->
             <div style="background: linear-gradient(135deg, #06b6d4, #0284c7); 
                 padding: 16px 20px;">
-              <p style="color: #ffffff; font-size: 11px; margin: 0 0 4px 0; 
+              <p style="color: #ffffff; font-size: 16px; margin: 0 0 4px 0; 
                   letter-spacing: 2px; opacity: 0.8;">LIVE BROADCAST</p>
-              <h2 style="color: #ffffff; font-size: 22px; margin: 0; 
+              <h2 style="color: #ffffff; font-size: 30px; margin: 0; 
                   font-weight: bold;">🌍 Daily Global Pulse</h2>
-              <p style="color: #e0f7ff; font-size: 12px; margin: 4px 0 0 0;">
+              <p style="color: #e0f7ff; font-size: 18px; margin: 4px 0 0 0;">
                 AI-Generated Briefing · $dateTime
               </p>
             </div>
@@ -425,15 +425,15 @@ class OverlayService {
             <!-- Total Events -->
             <div style="padding: 14px 20px 10px 20px; 
                 border-bottom: 1px solid #1e293b;">
-              <p style="color: #64748b; font-size: 11px; margin: 0 0 8px 0; 
+              <p style="color: #64748b; font-size: 16px; margin: 0 0 8px 0; 
                   letter-spacing: 1px;">ACTIVE EVENTS WORLDWIDE</p>
-              <p style="color: #06b6d4; font-size: 36px; font-weight: bold; 
+              <p style="color: #06b6d4; font-size: 52px; font-weight: bold; 
                   margin: 0; line-height: 1;">$totalEvents</p>
             </div>
 
             <!-- Category Breakdown -->
             <div style="padding: 12px 20px; border-bottom: 1px solid #1e293b;">
-              <p style="color: #64748b; font-size: 11px; margin: 0 0 8px 0; 
+              <p style="color: #64748b; font-size: 16px; margin: 0 0 8px 0; 
                   letter-spacing: 1px;">EVENT BREAKDOWN</p>
               <table style="width: 100%; border-collapse: collapse;">
                 <tr>
@@ -442,11 +442,11 @@ class OverlayService {
                         height: 10px; border-radius: 50%; 
                         background-color: #EF4444; margin-right: 8px;">
                     </span>
-                    <span style="color: #94a3b8; font-size: 13px;">
+                    <span style="color: #94a3b8; font-size: 20px;">
                       Earthquakes
                     </span>
                   </td>
-                  <td style="color: #ffffff; font-size: 13px; 
+                  <td style="color: #ffffff; font-size: 20px; 
                       text-align: right; font-weight: bold; padding: 4px 0;">
                     $earthquakeCount
                   </td>
@@ -457,11 +457,11 @@ class OverlayService {
                         height: 10px; border-radius: 50%; 
                         background-color: #F97316; margin-right: 8px;">
                     </span>
-                    <span style="color: #94a3b8; font-size: 13px;">
+                    <span style="color: #94a3b8; font-size: 20px;">
                       Disasters
                     </span>
                   </td>
-                  <td style="color: #ffffff; font-size: 13px; 
+                  <td style="color: #ffffff; font-size: 20px; 
                       text-align: right; font-weight: bold; padding: 4px 0;">
                     $disasterCount
                   </td>
@@ -472,11 +472,11 @@ class OverlayService {
                         height: 10px; border-radius: 50%; 
                         background-color: #A855F7; margin-right: 8px;">
                     </span>
-                    <span style="color: #94a3b8; font-size: 13px;">
+                    <span style="color: #94a3b8; font-size: 20px;">
                       Disease Alerts
                     </span>
                   </td>
-                  <td style="color: #ffffff; font-size: 13px; 
+                  <td style="color: #ffffff; font-size: 20px; 
                       text-align: right; font-weight: bold; padding: 4px 0;">
                     $diseaseCount
                   </td>
@@ -486,7 +486,7 @@ class OverlayService {
 
             <!-- Severity Breakdown -->
             <div style="padding: 12px 20px; border-bottom: 1px solid #1e293b;">
-              <p style="color: #64748b; font-size: 11px; margin: 0 0 8px 0; 
+              <p style="color: #64748b; font-size: 16px; margin: 0 0 8px 0; 
                   letter-spacing: 1px;">SEVERITY BREAKDOWN</p>
               <table style="width: 100%; border-collapse: collapse;">
                 <tr>
@@ -495,9 +495,9 @@ class OverlayService {
                         height: 10px; border-radius: 50%; 
                         background-color: #EF4444; margin-right: 8px;">
                     </span>
-                    <span style="color: #94a3b8; font-size: 13px;">Critical</span>
+                    <span style="color: #94a3b8; font-size: 20px;">Critical</span>
                   </td>
-                  <td style="color: #EF4444; font-size: 13px; 
+                  <td style="color: #EF4444; font-size: 20px; 
                       text-align: right; font-weight: bold; padding: 3px 0;">
                     $criticalCount
                   </td>
@@ -508,9 +508,9 @@ class OverlayService {
                         height: 10px; border-radius: 50%; 
                         background-color: #F97316; margin-right: 8px;">
                     </span>
-                    <span style="color: #94a3b8; font-size: 13px;">High</span>
+                    <span style="color: #94a3b8; font-size: 20px;">High</span>
                   </td>
-                  <td style="color: #F97316; font-size: 13px; 
+                  <td style="color: #F97316; font-size: 20px; 
                       text-align: right; font-weight: bold; padding: 3px 0;">
                     $highCount
                   </td>
@@ -521,9 +521,9 @@ class OverlayService {
                         height: 10px; border-radius: 50%; 
                         background-color: #EAB308; margin-right: 8px;">
                     </span>
-                    <span style="color: #94a3b8; font-size: 13px;">Medium</span>
+                    <span style="color: #94a3b8; font-size: 20px;">Medium</span>
                   </td>
-                  <td style="color: #EAB308; font-size: 13px; 
+                  <td style="color: #EAB308; font-size: 20px; 
                       text-align: right; font-weight: bold; padding: 3px 0;">
                     $mediumCount
                   </td>
@@ -534,9 +534,9 @@ class OverlayService {
                         height: 10px; border-radius: 50%; 
                         background-color: #22C55E; margin-right: 8px;">
                     </span>
-                    <span style="color: #94a3b8; font-size: 13px;">Low</span>
+                    <span style="color: #94a3b8; font-size: 20px;">Low</span>
                   </td>
-                  <td style="color: #22C55E; font-size: 13px; 
+                  <td style="color: #22C55E; font-size: 20px; 
                       text-align: right; font-weight: bold; padding: 3px 0;">
                     $lowCount
                   </td>
@@ -546,7 +546,7 @@ class OverlayService {
 
             <!-- Top Regions -->
             <div style="padding: 12px 20px; border-bottom: 1px solid #1e293b;">
-              <p style="color: #64748b; font-size: 11px; margin: 0 0 8px 0; 
+              <p style="color: #64748b; font-size: 16px; margin: 0 0 8px 0; 
                   letter-spacing: 1px;">TOP ACTIVE REGIONS</p>
               <table style="width: 100%; border-collapse: collapse;">
                 $regionRows
@@ -556,11 +556,11 @@ class OverlayService {
             <!-- AI Briefing Footer -->
             <div style="padding: 12px 20px; 
                 background-color: #1e293b; text-align: center;">
-              <p style="color: #06b6d4; font-size: 12px; margin: 0; 
+              <p style="color: #06b6d4; font-size: 18px; margin: 0; 
                   font-style: italic;">
                 ✦ AI Briefing In Progress...
               </p>
-              <p style="color: #475569; font-size: 11px; margin: 4px 0 0 0;">
+              <p style="color: #475569; font-size: 16px; margin: 4px 0 0 0;">
                 Powered by Google Gemma 4 via Global Pulse
               </p>
             </div>

@@ -30,7 +30,6 @@ class _DailyPulseCardState extends State<DailyPulseCard> {
   Future<void> _onPlayTapped() async {
     setState(() => _isLoading = true);
 
-    // Get state
     final state = context.read<EventsBloc>().state;
     final ssh = context.read<SSHService>();
     final tts = context.read<TTSService>();
@@ -44,12 +43,9 @@ class _DailyPulseCardState extends State<DailyPulseCard> {
       _isPlaying = true;
     });
 
-    // If LG connected — send dashboard overlay and start camera tour
     if (ssh.isConnected) {
-      // Build top regions for dashboard
       final topRegions = TopRegionHelper.getTopRegions(state.filteredEvents);
 
-      // Generate and send briefing dashboard to slave screen
       final now = DateTime.now();
       final dateTime =
           '${now.day}/${now.month}/${now.year} · ${now.hour}:${now.minute.toString().padLeft(2, '0')}';
@@ -69,10 +65,8 @@ class _DailyPulseCardState extends State<DailyPulseCard> {
 
       await ssh.sendOverlayKML(overlayKml);
 
-      // Get tour events and start camera tour
       final tourEvents = TopRegionHelper.getBriefingTourEvents(state.allEvents);
 
-      // Fly to first event immediately
       if (tourEvents.isNotEmpty) {
         await ssh.flyTo(
           latitude: tourEvents[0].latitude,
@@ -82,7 +76,7 @@ class _DailyPulseCardState extends State<DailyPulseCard> {
         );
       }
 
-      // Start camera tour timer — fly to next event every 10 seconds
+      // Start camera tour timer
       int tourIndex = 1;
       _briefingTimer = Timer.periodic(const Duration(seconds: 10), (
         timer,
@@ -99,10 +93,17 @@ class _DailyPulseCardState extends State<DailyPulseCard> {
         );
         tourIndex++;
       });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please connect to the RIG first...')),
+      );
+      setState(() {
+      _isLoading = false;
+      _isPlaying = false;
+    });
     }
 
-    // Start TTS — speaks while camera tours
-
+    // Start TTS
     final box = Hive.box(AppConstants.settingsBox);
     final ttsEnabled = box.get(AppConstants.keyTTSEnabled, defaultValue: true);
 
@@ -141,47 +142,91 @@ class _DailyPulseCardState extends State<DailyPulseCard> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.cardColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Daily Global Pulse',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'AI-generated 60s briefing',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  _isPlaying
-                      ? 'Speaking...'
-                      : _isLoading
-                      ? 'Generating briefing...'
-                      : 'Tap to hear today\'s global briefing',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: _isPlaying
-                        ? AppTheme.primary
-                        : AppTheme.textTertiary,
-                  ),
-                ),
-              ],
-            ),
+        borderRadius: BorderRadius.circular(22),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [const Color(0xFF1A1040), const Color(0xFF0D0B2A)],
+        ),
+        border: Border.all(
+          color: const Color(0xFF7C3AED).withValues(alpha: 0.25),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF7C3AED).withValues(alpha: 0.15),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
           ),
-          const SizedBox(width: 12),
-          // Button area
-          _buildActionButton(),
         ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: const Color(0xFF7C3AED).withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: const Color(0xFF7C3AED).withValues(alpha: 0.35),
+                ),
+              ),
+              child: const Icon(
+                Icons.podcasts_rounded,
+                color: Color(0xFFA78BFA),
+                size: 28,
+              ),
+            ),
+            const SizedBox(width: 20),
+
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Daily Global Pulse',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    'AI-generated 60s briefing',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.7),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    _isPlaying
+                        ? 'Speaking...'
+                        : _isLoading
+                        ? 'Generating briefing...'
+                        : 'Tap to hear today\'s global briefing',
+                    style: TextStyle(
+                      color: _isPlaying
+                          ? const Color(0xFFA78BFA)
+                          : Colors.white.withValues(alpha: 0.5),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+
+            // Button area
+            _buildActionButton(),
+          ],
+        ),
       ),
     );
   }
@@ -191,15 +236,21 @@ class _DailyPulseCardState extends State<DailyPulseCard> {
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const SizedBox(
-            width: 32,
-            height: 32,
-            child: CircularProgressIndicator(strokeWidth: 2),
+          SizedBox(
+            width: 28,
+            height: 28,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: const Color(0xFFA78BFA),
+            ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           Text(
             'Generating...',
-            style: TextStyle(color: AppTheme.textTertiary, fontSize: 11),
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.35),
+              fontSize: 10,
+            ),
           ),
         ],
       );
@@ -211,13 +262,18 @@ class _DailyPulseCardState extends State<DailyPulseCard> {
         width: 48,
         height: 48,
         decoration: BoxDecoration(
-          color: AppTheme.primary.withValues(alpha: 0.15),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF7C3AED), Color(0xFF5B21B6)],
+          ),
           shape: BoxShape.circle,
+          boxShadow: [],
         ),
         child: Icon(
           _isPlaying ? Icons.stop_rounded : Icons.play_arrow_rounded,
-          color: AppTheme.primary,
-          size: 28,
+          color: Colors.white,
+          size: 26,
         ),
       ),
     );

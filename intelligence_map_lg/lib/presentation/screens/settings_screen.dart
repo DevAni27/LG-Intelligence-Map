@@ -298,7 +298,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(height: 8),
                 Text(
                   'Powers AI summaries using Google Gemma 4 via OpenRouter',
-                  style: TextStyle(color: AppTheme.textTertiary, fontSize: 11),
+                  style: TextStyle(color: const Color.fromARGB(255, 153, 164, 168), fontSize: 11, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -366,13 +366,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Text to Speech'),
+                    Text('Text to Speech',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    ),
                     Text(
                       'Read overlay content aloud',
                       style: TextStyle(
-                        color: AppTheme.textTertiary,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
+                        color: const Color.fromARGB(255, 133, 140, 142),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
@@ -398,6 +404,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: 'LG Quick Commands',
           ),
           const SizedBox(height: 12),
+          
           _buildCard(
             child: Column(
               children: [
@@ -476,7 +483,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.cardColor,
+        color: const Color(0xFF0D1421),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
       ),
