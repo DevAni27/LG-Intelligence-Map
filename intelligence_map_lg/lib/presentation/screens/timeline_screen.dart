@@ -177,8 +177,8 @@ class _TimelineScreenState extends State<TimelineScreen>
                 Row(
                   children: [
                     Container(
-                      width: 36,
-                      height: 36,
+                      width: 42,
+                      height: 42,
                       decoration: BoxDecoration(
                         color: AppTheme.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(9),
@@ -187,7 +187,7 @@ class _TimelineScreenState extends State<TimelineScreen>
                         ),
                       ),
                       child: const Icon(Icons.history_rounded,
-                          color: AppTheme.primary, size: 22),
+                          color: AppTheme.primary, size: 28),
                     ),
                     const SizedBox(width: 10),
                     Text(

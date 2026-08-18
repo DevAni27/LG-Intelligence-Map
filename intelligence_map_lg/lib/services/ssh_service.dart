@@ -173,6 +173,7 @@ class SSHService extends ChangeNotifier {
       await execute('echo "" > /var/www/html/kmls.txt');
       await execute('echo "" > /tmp/query.txt');
       await execute('rm -f /var/www/html/global_pulse.kml');
+      await clearoverlayKML('');
       return true;
     } catch (e) {
       return false;

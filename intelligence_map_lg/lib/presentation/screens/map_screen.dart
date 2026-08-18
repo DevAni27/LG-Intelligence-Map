@@ -392,7 +392,7 @@ class _MapScreenState extends State<MapScreen> {
                         description:
                             'Marker colors represent event types: '
                             'Red = Earthquakes, Blue = Floods & Storms, '
-                            'Orange = Wildfires, Purple = Disease Outbreaks, Yellow = Conflicts.',
+                            'Orange = Wildfires, Purple = Disease Outbreaks',
                       ),
                       const SizedBox(height: 14),
 
@@ -739,8 +739,8 @@ class _MapScreenState extends State<MapScreen> {
         return AppTheme.wildfireColor;
       case EventCategory.diseaseOutbreak:
         return AppTheme.diseaseColor;
-      case EventCategory.conflict:
-        return AppTheme.conflictColor;
+      default:
+        return AppTheme.surface;
     }
   }
 

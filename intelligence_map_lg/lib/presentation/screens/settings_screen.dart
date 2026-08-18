@@ -404,6 +404,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: 'LG Quick Commands',
           ),
           const SizedBox(height: 12),
+          
           _buildCard(
             child: Column(
               children: [

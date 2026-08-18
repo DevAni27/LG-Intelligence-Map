@@ -36,14 +36,14 @@ class StatCard extends StatelessWidget {
               color: iconColor.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(9),
             ),
-            child: Icon(icon, color: iconColor, size: 16),
+            child: Icon(icon, color: iconColor, size: 20),
           ),
           const SizedBox(height: 12),
           Text(
             value,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 26,
+              fontSize: 28,
               fontWeight: FontWeight.w800,
               height: 1.0,
               letterSpacing: -0.5,
@@ -53,8 +53,8 @@ class StatCard extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.7),
-              fontSize: 14,
+              color: Colors.white.withValues(alpha: 0.8),
+              fontSize: 12,
               fontWeight: FontWeight.w500,
             ),
             maxLines: 1,

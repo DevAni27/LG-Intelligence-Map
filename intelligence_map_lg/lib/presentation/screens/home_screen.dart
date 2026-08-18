@@ -147,8 +147,8 @@ class HomeScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            width: 38,
-            height: 38,
+            width: 42,
+            height: 42,
             decoration: BoxDecoration(
               color: AppTheme.primary.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(10),
@@ -159,7 +159,7 @@ class HomeScreen extends StatelessWidget {
             child: const Icon(
               Icons.public_rounded,
               color: AppTheme.primary,
-              size: 20,
+              size: 26,
             ),
           ),
           const SizedBox(width: 12),
@@ -171,7 +171,7 @@ class HomeScreen extends StatelessWidget {
                 style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                   fontWeight: FontWeight.w900,
                   letterSpacing: -0.5,
-                  fontSize: 24,
+                  fontSize: 28,
                 ),
               ),
               Text(
@@ -281,39 +281,33 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildStatsGrid(EventsState state) {
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 10,
-      crossAxisSpacing: 10,
-
-      childAspectRatio: 1.45,
+    return Row(
       children: [
-        StatCard(
-          icon: Icons.waves,
-          label: 'Earthquakes',
-          value: '${state.earthquakeCount}',
-          iconColor: AppTheme.earthquakeColor,
+        Expanded(
+          child: StatCard(
+            icon: Icons.waves,
+            label: 'Earthquakes',
+            value: '${state.earthquakeCount}',
+            iconColor: AppTheme.earthquakeColor,
+          ),
         ),
-        StatCard(
-          icon: Icons.warning_amber_rounded,
-          label: 'Disasters',
-          value: '${state.disasterCount}',
-          iconColor: AppTheme.wildfireColor,
+        const SizedBox(width: 10),
+        Expanded(
+          child: StatCard(
+            icon: Icons.warning_amber_rounded,
+            label: 'Disasters',
+            value: '${state.disasterCount}',
+            iconColor: AppTheme.wildfireColor,
+          ),
         ),
-        StatCard(
-          icon: Icons.coronavirus_outlined,
-          label: 'Disease Alerts',
-          value: '${state.diseaseCount}',
-          iconColor: AppTheme.diseaseColor,
-        ),
-        StatCard(
-          icon: Icons.shield_outlined,
-          label: 'Conflicts',
-          value:
-              '${state.filteredEvents.where((e) => e.category == EventCategory.conflict).length}',
-          iconColor: AppTheme.conflictColor,
+        const SizedBox(width: 10),
+        Expanded(
+          child: StatCard(
+            icon: Icons.coronavirus_outlined,
+            label: 'Disease Alerts',
+            value: '${state.diseaseCount}',
+            iconColor: AppTheme.diseaseColor,
+          ),
         ),
       ],
     );
