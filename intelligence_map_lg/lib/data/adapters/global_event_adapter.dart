@@ -1,5 +1,5 @@
 import 'package:hive/hive.dart';
-import 'global_event.dart';
+import '../models/global_event.dart';
 
 /// Manual Hive adapters for GlobalEvent and its enums.
 /// This replaces hive_generator code generation to avoid

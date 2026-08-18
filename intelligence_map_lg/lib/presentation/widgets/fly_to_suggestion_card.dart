@@ -6,7 +6,7 @@ import 'package:latlong2/latlong.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/top_region_helper.dart';
-import '../../logic/blocs/events/events_bloc.dart';
+import '../../presentation/blocs/events/events_bloc.dart';
 import '../../services/gemma_service.dart';
 import '../../services/overlay_service.dart';
 import '../../services/ssh_service.dart';
