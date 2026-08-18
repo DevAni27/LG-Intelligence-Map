@@ -10,10 +10,10 @@ class KmlHelper {
       <Icon>
         <href>http://lg1:81/lg_rig_logo.png</href>
       </Icon>
-      <overlayXY x="0" y="0" xunits="fraction" yunits="fraction"/>
-      <screenXY x="0.02" y="0.725" xunits="fraction" yunits="fraction"/>
+      <overlayXY x="0" y="1" xunits="fraction" yunits="fraction"/>
+      <screenXY x="0.02" y="0.95" xunits="fraction" yunits="fraction"/>
       <rotationXY x="0" y="0" xunits="fraction" yunits="fraction"/>
-      <size x="554" y="500" xunits="pixels" yunits="pixels"/>
+      <size x="820" y="782" xunits="pixels" yunits="pixels"/>
     </ScreenOverlay>
   </Document>
 </kml>''';
