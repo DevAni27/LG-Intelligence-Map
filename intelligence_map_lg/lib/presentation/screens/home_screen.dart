@@ -14,7 +14,9 @@ import '../widgets/daily_pulse_card.dart';
 import '../widgets/shimmer_loader.dart';
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+  final VoidCallback? onGoToMap;
+  final VoidCallback? onGoToSettings;
+  const HomeScreen({super.key, this.onGoToMap, this.onGoToSettings});
 
   @override
   Widget build(BuildContext context) {
@@ -184,98 +186,135 @@ class HomeScreen extends StatelessWidget {
             ],
           ),
           const Spacer(),
-          const ConnectionStatus(),
+          ConnectionStatus(onGoToSettings: onGoToSettings),
         ],
       ),
     );
   }
 
   Widget _buildHeroBanner(BuildContext context, EventsState state) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(22, 22, 22, 22),
-      decoration: BoxDecoration(
-        // Muted, deep gradient — not eye-searing
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF0E4D6E), Color(0xFF0A3550), Color(0xFF062338)],
-        ),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.2)),
-
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.primaryLight.withValues(alpha: 0.15),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
+    return GestureDetector(
+      onTap: onGoToMap,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(22, 22, 22, 22),
+        decoration: BoxDecoration(
+          // Muted, deep gradient — not eye-searing
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF0E4D6E), Color(0xFF0A3550), Color(0xFF062338)],
           ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Column(
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: AppTheme.primary.withValues(alpha: 0.2)),
+
+          boxShadow: [
+            BoxShadow(
+              color: AppTheme.primaryLight.withValues(alpha: 0.15),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Top row — info + globe icon
+            Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primary.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          'TOTAL ACTIVE EVENTS',
+                          style: TextStyle(
+                            color: AppTheme.primary,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        '${state.totalEvents}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 54,
+                          fontWeight: FontWeight.w800,
+                          height: 1.0,
+                          letterSpacing: -2,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Worldwide right now',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.7),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Globe icon
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
+                  width: 56,
+                  height: 56,
                   decoration: BoxDecoration(
-                    color: AppTheme.primary.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    ' TOTAL ACTIVE EVENTS',
-                    style: TextStyle(
-                      color: AppTheme.primary,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 1.2,
+                    color: Colors.white.withValues(alpha: 0.07),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.3),
                     ),
                   ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  '${state.totalEvents}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 54,
-                    fontWeight: FontWeight.w800,
-                    height: 1.0,
-                    letterSpacing: -2,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Worldwide right now',
-                  style: TextStyle(
+                  child: Icon(
+                    Icons.public_rounded,
                     color: Colors.white.withValues(alpha: 0.7),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
+                    size: 28,
                   ),
                 ),
               ],
             ),
-          ),
 
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.07),
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+            const SizedBox(height: 14),
+
+            // Go to Map — full width row, pushes to right edge of card
+            Align(
+              alignment: Alignment.centerRight,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Go to Map',
+                    style: TextStyle(
+                      color: AppTheme.primary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.arrow_forward_rounded,
+                    color: AppTheme.primary,
+                    size: 14,
+                  ),
+                ],
+              ),
             ),
-            child: Icon(
-              Icons.public_rounded,
-              color: Colors.white.withValues(alpha: 0.7),
-              size: 28,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
