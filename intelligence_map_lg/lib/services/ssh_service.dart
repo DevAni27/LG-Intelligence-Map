@@ -135,7 +135,6 @@ class SSHService extends ChangeNotifier {
       final fileName = 'slave_$rightScreen.kml';
       final remotePath = '/var/www/html/kml/$fileName';
 
-      // Use SFTP to upload — handles newlines and special chars correctly
       final sftp = await _client!.sftp();
       final file = await sftp.open(
         remotePath,
@@ -146,9 +145,12 @@ class SSHService extends ChangeNotifier {
       );
       await file.writeBytes(utf8.encode(kmlContent));
       await file.close();
+
+      // ← ADD THIS — tells Google Earth to reload the overlay
+      await _setSlaveRefresh(rightScreen);
+
       return true;
     } catch (e) {
-
       return false;
     }
   }
@@ -218,10 +220,13 @@ class SSHService extends ChangeNotifier {
       );
       await file.writeBytes(imageBytes);
       await file.close();
-
     } catch (e) {
       // Silently ignored
     }
+  }
+
+  int _getLeftSlaveScreen() {
+    return _numberOfRigs; // always the last screen number
   }
 
   /// Sends the Global Pulse logo to the leftmost slave screen.
@@ -229,7 +234,7 @@ class SSHService extends ChangeNotifier {
     if (_client == null) return false;
 
     try {
-      final leftScreen = (_numberOfRigs / 2).floor() + 2;
+      final leftScreen = _getLeftSlaveScreen();
 
       await _uploadLogoImage();
 
@@ -250,7 +255,7 @@ class SSHService extends ChangeNotifier {
     if (_client == null) return false;
 
     try {
-      final leftScreen = (_numberOfRigs / 2).floor() + 2;
+      final leftScreen = _getLeftSlaveScreen();
       const emptyKml =
           '<?xml version="1.0" encoding="UTF-8"?>'
           '<kml xmlns="http://www.opengis.net/kml/2.2">'
@@ -269,13 +274,8 @@ class SSHService extends ChangeNotifier {
   // NAVIGATION
 
   Future<void> flyToDefault() async {
-  await flyTo(
-    latitude: 0,
-    longitude: 0,
-    range: 25000000,  
-    tilt: 0,
-  );
-}
+    await flyTo(latitude: 0, longitude: 0, range: 25000000, tilt: 0);
+  }
 
   /// Sends a flyto command to navigate the LG camera.
   Future<bool> flyTo({

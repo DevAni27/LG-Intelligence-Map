@@ -103,7 +103,7 @@ class _MapScreenState extends State<MapScreen> {
 
                             Positioned(
                               right: 14,
-                              bottom: 80,
+                              bottom: 100,
                               child: _buildRightControls(),
                             ),
 
@@ -271,6 +271,22 @@ class _MapScreenState extends State<MapScreen> {
           },
         ),
         const SizedBox(height: 14),
+        // Stop TTS ← add this
+        _buildMapControlButton(
+          icon: Icons.volume_off_rounded,
+          iconColor: AppTheme.severityCritical, // red to make it obvious
+          onTap: () {
+            final tts = context.read<TTSService>();
+            tts.stop();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Voice stopped'),
+                duration: Duration(seconds: 1),
+                backgroundColor: Colors.red,
+              ),
+            );
+          },
+        ),
       ],
     );
   }
@@ -278,6 +294,7 @@ class _MapScreenState extends State<MapScreen> {
   Widget _buildMapControlButton({
     required IconData icon,
     required VoidCallback onTap,
+    Color? iconColor,
   }) {
     return GestureDetector(
       onTap: onTap,
@@ -296,7 +313,7 @@ class _MapScreenState extends State<MapScreen> {
             ),
           ],
         ),
-        child: Icon(icon, size: 20, color: Colors.white.withValues(alpha: 0.8)),
+        child: Icon(icon, size: 20, color: iconColor ?? Colors.white.withValues(alpha: 0.8)),
       ),
     );
   }

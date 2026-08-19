@@ -6,7 +6,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// Displays the LG connection status.
 /// Rebuilds every 2 seconds to reflect connection changes.
 class ConnectionStatus extends StatefulWidget {
-  const ConnectionStatus({super.key});
+  final VoidCallback? onGoToSettings;
+  const ConnectionStatus({super.key, this.onGoToSettings});
 
   @override
   State<ConnectionStatus> createState() => _ConnectionStatusState();
@@ -35,41 +36,59 @@ class _ConnectionStatusState extends State<ConnectionStatus> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(
-            color: _isConnected
-                ? AppTheme.statusConnected
-                : AppTheme.statusDisconnected,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: (_isConnected
-                        ? AppTheme.statusConnected
-                        : AppTheme.statusDisconnected)
-                    .withValues(alpha: 0.4),
-                blurRadius: 6,
-                spreadRadius: 1,
+    final ssh = context.watch<SSHService>();
+    final isConnected = ssh.isConnected;
+
+    return GestureDetector(
+      onTap: isConnected ? null : widget.onGoToSettings,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Status dot + label row
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 7,
+                height: 7,
+                decoration: BoxDecoration(
+                  color: isConnected
+                      ? const Color(0xFF22C55E)
+                      : AppTheme.severityCritical,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                isConnected ? 'LG Connected' : 'LG Disconnected',
+                style: TextStyle(
+                  color: isConnected
+                      ? const Color(0xFF22C55E)
+                      : AppTheme.severityCritical,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),
-        ),
-        const SizedBox(width: 6),
-        Text(
-          _isConnected ? 'LG Connected' : 'LG Disconnected',
-          style: TextStyle(
-            color: _isConnected
-                ? AppTheme.statusConnected
-                : AppTheme.statusDisconnected,
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
+
+          // Subtitle — only show when disconnected
+          if (!isConnected)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(
+                'Tap to connect',
+                style: TextStyle(
+                  color: AppTheme.severityCritical.withValues(alpha: 0.6),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              
+            ),
+        ],
+      ),
     );
   }
 }

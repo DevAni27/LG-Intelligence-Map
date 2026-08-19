@@ -15,20 +15,28 @@ class MainNavigation extends StatefulWidget {
 class _MainNavigationState extends State<MainNavigation> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = const [
-    HomeScreen(),
-    MapScreen(),
-    AskAIScreen(),
-    TimelineScreen(),
-    SettingsScreen(),
-  ];
+  void _goToTab(int index) {
+    setState(() => _currentIndex = index);
+  }
 
   @override
   Widget build(BuildContext context) {
+    // Built inside build() so callbacks have access to _goToTab
+    final screens = [
+      HomeScreen(
+        onGoToMap: () => _goToTab(1),       // ← Go to Map
+        onGoToSettings: () => _goToTab(4),  // ← Go to Settings
+      ),
+      const MapScreen(),
+      const AskAIScreen(),
+      const TimelineScreen(),
+      const SettingsScreen(),
+    ];
+
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
-        children: _screens,
+        children: screens,
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
@@ -41,11 +49,7 @@ class _MainNavigationState extends State<MainNavigation> {
         ),
         child: BottomNavigationBar(
           currentIndex: _currentIndex,
-          onTap: (index) {
-            setState(() {
-              _currentIndex = index;
-            });
-          },
+          onTap: _goToTab,
           items: const [
             BottomNavigationBarItem(
               icon: Icon(Icons.home_outlined),

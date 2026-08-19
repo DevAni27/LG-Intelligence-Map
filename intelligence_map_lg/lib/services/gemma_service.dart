@@ -18,11 +18,19 @@ class GemmaService {
     return key.trim();
   }
 
+  bool _isProcessing = false;
+
   Future<String> _callGemma(String prompt) async {
     final apiKey = _getApiKey();
     if (apiKey == null) {
       return 'Please add your OpenRouter API key in Settings to use AI features.';
     }
+
+    if (_isProcessing) {
+      return 'Please wait for the current request to complete.';
+    }
+
+    _isProcessing = true;
 
     try {
       final response = await http.post(
@@ -62,6 +70,8 @@ class GemmaService {
       }
     } catch (e) {
       return 'Failed to get response: ${e.toString()}';
+    } finally {
+      _isProcessing = false;
     }
   }
 
@@ -336,8 +346,6 @@ DESCRIPTION: [2-3 sentences on what happened and its impact]
 SIGNIFICANCE: [1 sentence on why it matters historically]
 ''');
   }
-
-  
 }
 
 class FlyToSuggestion {
