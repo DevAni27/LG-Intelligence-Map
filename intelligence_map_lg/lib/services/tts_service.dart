@@ -3,11 +3,11 @@ import 'dart:async';
 import 'package:flutter_tts/flutter_tts.dart';
 import '../data/models/global_event.dart';
 import '../core/utils/top_region_helper.dart';
-import 'gemma_service.dart';
+import 'gemini_service.dart';
 
 class TTSService {
   final FlutterTts _tts = FlutterTts();
-  final GemmaService _geminiService = GemmaService();
+  final GeminiService _geminiService = GeminiService();
 
   TTSService() {
     _init();

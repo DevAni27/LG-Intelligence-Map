@@ -6,24 +6,26 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 
-class GemmaService {
+class GeminiService {
   final Map<String, String> _explanationCache = {};
 
-  //method to get the gemma model
+  //method to get the gemini model
 
   String? _getApiKey() {
     final box = Hive.box(AppConstants.settingsBox);
-    final key = box.get(AppConstants.keyOpenRouterApiKey, defaultValue: '');
+    final key = box.get(AppConstants.keyGoogleAIStudioApiKey, defaultValue: '');
+    debugPrint('=== API KEY LENGTH: ${key?.length}');
+    debugPrint('=== API KEY FIRST 10: ${key?.substring(0, 10)}');
     if (key == null || key.isEmpty) return null;
     return key.trim();
   }
 
   bool _isProcessing = false;
 
-  Future<String> _callGemma(String prompt) async {
+  Future<String> _callGemini(String prompt) async {
     final apiKey = _getApiKey();
     if (apiKey == null) {
-      return 'Please add your OpenRouter API key in Settings to use AI features.';
+      return 'Please add your API key in Settings to use AI features.';
     }
 
     if (_isProcessing) {
@@ -34,38 +36,46 @@ class GemmaService {
 
     try {
       final response = await http.post(
-        Uri.parse('https://openrouter.ai/api/v1/chat/completions'),
+        Uri.parse(
+          'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent',
+        ),
         headers: {
-          'Authorization': 'Bearer $apiKey',
           'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://liquidgalaxy.eu',
-          'X-Title': 'Global Pulse',
+          'x-goog-api-key': apiKey, // ← auth key goes here
         },
         body: jsonEncode({
-          'model': 'google/gemma-4-26b-a4b-it:free',
-          'messages': [
-            {'role': 'user', 'content': prompt},
+          'contents': [
+            {
+              'parts': [
+                {'text': prompt},
+              ],
+            },
           ],
+          'generationConfig': {'maxOutputTokens': 1024, 'temperature': 0.7},
         }),
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
 
-        // Safe null checking at each level
-        final choices = data['choices'];
-        if (choices == null || choices.isEmpty) {
+        // Native Gemini API response format
+        final candidates = data['candidates'];
+        if (candidates == null || candidates.isEmpty) {
           return 'No response received. Please try again.';
         }
 
-        final message = choices[0]['message'];
-        if (message == null) {
+        final content = candidates[0]['content'];
+        if (content == null) return 'No response received. Please try again.';
+
+        final parts = content['parts'];
+        if (parts == null || parts.isEmpty) {
           return 'No response received. Please try again.';
         }
 
-        final content = message['content'];
-        return content ?? 'No response received. Please try again.';
+        return parts[0]['text'] ?? 'No response received. Please try again.';
       } else {
+        debugPrint('=== ERROR STATUS: ${response.statusCode}');
+        debugPrint('=== ERROR BODY: ${response.body}');
         return 'Error ${response.statusCode}: Please try again.';
       }
     } catch (e) {
@@ -145,7 +155,7 @@ Question: $question''';
   Future<String> askQuestion(String question, List<GlobalEvent> events) async {
     try {
       final prompt = _buildAskPrompt(question, events);
-      final response = await _callGemma(prompt);
+      final response = await _callGemini(prompt);
       return response;
     } catch (e) {
       return 'Failed to get response: ${e.toString()}';
@@ -189,7 +199,7 @@ Question: $question''';
 
     try {
       final prompt = _buildRegionPrompt(visibleEvents);
-      final response = await _callGemma(prompt);
+      final response = await _callGemini(prompt);
       return response;
     } catch (e) {
       return 'Failed to get response: ${e.toString()}';
@@ -223,7 +233,7 @@ Question: $question''';
       }
 
       final prompt = _buildEventPrompt(event);
-      final response = await _callGemma(prompt);
+      final response = await _callGemini(prompt);
 
       _explanationCache[event.id] = response;
       return response;
@@ -282,7 +292,7 @@ Rules:
 
     try {
       final prompt = _buildDailyPulsePrompt(recentEvents);
-      final response = await _callGemma(prompt);
+      final response = await _callGemini(prompt);
       return response;
     } catch (e) {
       return 'Failed to get response: ${e.toString()}';
@@ -334,7 +344,7 @@ Rules:
   }
 
   Future<String> generateHistoricalSummary(String eventName) async {
-    return await _callGemma('''
+    return await _callGemini('''
 You are Global Pulse, a world event analyst.
 Provide a structured factual summary of this historical event: $eventName
 

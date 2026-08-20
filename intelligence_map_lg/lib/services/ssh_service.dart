@@ -226,7 +226,7 @@ class SSHService extends ChangeNotifier {
   }
 
   int _getLeftSlaveScreen() {
-    return _numberOfRigs; // always the last screen number
+    return (_numberOfRigs / 2).floor() + 2; 
   }
 
   /// Sends the Global Pulse logo to the leftmost slave screen.

@@ -7,7 +7,7 @@ import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/top_region_helper.dart';
 import '../../logic/blocs/events/events_bloc.dart';
-import '../../services/gemma_service.dart';
+import '../../services/gemini_service.dart';
 import '../../services/overlay_service.dart';
 import '../../services/ssh_service.dart';
 import '../../services/tts_service.dart';
@@ -80,13 +80,13 @@ class FlyToSuggestionCard extends StatelessWidget {
                 );
 
                 if (!context.mounted) return;
-                final gemma = context.read<GemmaService>();
+                final gemini = context.read<GeminiService>();
 
                 String overlayKML;
 
                 if (historicalEvent != null) {
-                  // Historical event — use Gemma knowledge
-                  final summary = await gemma.generateHistoricalSummary(
+                  // Historical event — use Gemini knowledge
+                  final summary = await gemini.generateHistoricalSummary(
                     historicalEvent!,
                   );
                   overlayKML = OverlayService.generateHistoricalOverlayKml(
@@ -114,7 +114,7 @@ class FlyToSuggestionCard extends StatelessWidget {
                   );
                   overlayKML = await OverlayService.generateRegionOverlayKML(
                     visibleEvents,
-                    gemma,
+                    gemini,
                   );
 
                   // TTS for region

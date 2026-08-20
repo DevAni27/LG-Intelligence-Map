@@ -17,7 +17,7 @@ import '../widgets/category_legend.dart';
 import '../../services/tts_service.dart';
 import '../../core/constants/app_constants.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import '../../services/gemma_service.dart';
+import '../../services/gemini_service.dart';
 import '../widgets/event_detail_sheet.dart';
 
 class MapScreen extends StatefulWidget {
@@ -709,10 +709,10 @@ class _MapScreenState extends State<MapScreen> {
 
     String overlayKML;
 
-    final gemma = context.read<GemmaService>();
+    final gemini = context.read<GeminiService>();
     overlayKML = await OverlayService.generateRegionOverlayKML(
       visibleEvents,
-      gemma,
+      gemini,
     );
 
     await ssh.sendOverlayKML(overlayKML);

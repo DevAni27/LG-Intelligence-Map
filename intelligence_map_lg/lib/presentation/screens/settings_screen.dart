@@ -27,7 +27,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _isConnected = false;
   bool _ttsEnabled = true;
 
-  final _openRouterKeyController = TextEditingController();
+  final _GoogleAIStudioKeyController = TextEditingController();
 
   @override
   void initState() {
@@ -52,7 +52,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         defaultValue: 'lg',
       );
       _numberOfRigs = box.get(AppConstants.keyNumberOfRigs, defaultValue: 3);
-      _openRouterKeyController.text = box.get(AppConstants.keyOpenRouterApiKey, defaultValue: '');
+      _GoogleAIStudioKeyController.text = box.get(AppConstants.keyGoogleAIStudioApiKey, defaultValue: '');
     });
   }
 
@@ -64,7 +64,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await box.put(AppConstants.keySSHPassword, _passwordController.text);
     await box.put(AppConstants.keyNumberOfRigs, _numberOfRigs);
     await box.put(AppConstants.keyTTSEnabled, _ttsEnabled);
-    await box.put(AppConstants.keyOpenRouterApiKey, _openRouterKeyController.text.trim());
+    await box.put(AppConstants.keyGoogleAIStudioApiKey, _GoogleAIStudioKeyController.text.trim());
   }
 
   Future<void> _connect() async {
@@ -287,17 +287,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 TextField(
-                  controller: _openRouterKeyController,
+                  controller: _GoogleAIStudioKeyController,
                   obscureText: true,
                   decoration: const InputDecoration(
-                    hintText: 'OpenRouter API Key (Gemma 4)',
+                    hintText: 'Gemini API Key (Gemini 3.6 Flash)',
                     prefixIcon: Icon(Icons.key_outlined, size: 20),
                   ),
                   onChanged: (_) => _saveSettings(),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Powers AI summaries using Google Gemma 4 via OpenRouter',
+                  'Powers AI summaries using Google Gemini 3.6 Flash via GoogleAIStudio',
                   style: TextStyle(color: const Color.fromARGB(255, 153, 164, 168), fontSize: 11, fontWeight: FontWeight.bold),
                 ),
               ],
@@ -641,7 +641,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _portController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
-    _openRouterKeyController.dispose();
+    _GoogleAIStudioKeyController.dispose();
     super.dispose();
   }
 }

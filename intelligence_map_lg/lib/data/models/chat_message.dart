@@ -1,4 +1,4 @@
-import '../../services/gemma_service.dart';
+import '../../services/gemini_service.dart';
 
 
 class ChatMessage {

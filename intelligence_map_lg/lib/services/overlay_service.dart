@@ -1,6 +1,6 @@
 import '../data/models/global_event.dart';
 import '../core/utils/top_region_helper.dart';
-import 'gemma_service.dart';
+import 'gemini_service.dart';
 
 class OverlayService {
   static String generateEventOverlayKml(GlobalEvent event) {
@@ -106,7 +106,7 @@ class OverlayService {
 
   static Future<String> generateRegionOverlayKML(
     List<GlobalEvent> visibleEvents,
-    GemmaService gemmmaService,
+    GeminiService gemmmaService,
   ) async {
     final dominant = TopRegionHelper.getDominantCategory(visibleEvents);
     final imageURL = dominant != null
@@ -117,12 +117,12 @@ class OverlayService {
     final severityCount = TopRegionHelper.getSeverityCounts(visibleEvents);
     final topEvent = TopRegionHelper.getTopEvent(visibleEvents);
 
-    String gemmaSummary;
+    String geminiSummary;
 
     try {
-      gemmaSummary = await gemmmaService.generateRegionSummary(visibleEvents);
+      geminiSummary = await gemmmaService.generateRegionSummary(visibleEvents);
     } catch (e) {
-      gemmaSummary =
+      geminiSummary =
           'AI summary temporarily unavailable. ${visibleEvents.length} active events detected in this region.';
     }
 
@@ -241,7 +241,7 @@ class OverlayService {
               <p style="color: #c5c6c7; font-size: 16px; margin: 0 0 8px 0; letter-spacing: 1px;">AI REGIONAL SUMMARY</p>
               <div style="background-color: #1e293b; border-radius: 8px; padding: 12px 14px; border-left: 3px solid #06b6d4;">
                 <p style="color: #a9aaab; font-size: 20px; font-style: italic; margin: 0;">
-                  $gemmaSummary
+                  $geminiSummary
                 </p>
               </div>
             </div>
@@ -561,7 +561,7 @@ class OverlayService {
                 ✦ AI Briefing In Progress...
               </p>
               <p style="color: #475569; font-size: 16px; margin: 4px 0 0 0;">
-                Powered by Google Gemma 4 via Global Pulse
+                Powered by Google Gemini 4 via Global Pulse
               </p>
             </div>
 

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/models/chat_message.dart';
 import '../../logic/blocs/events/events_bloc.dart';
-import '../../services/gemma_service.dart';
+import '../../services/gemini_service.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../widgets/fly_to_suggestion_card.dart';
 
@@ -76,13 +76,13 @@ class _AskAIScreenState extends State<AskAIScreen>
     final state = context.read<EventsBloc>().state;
     final events = state.filteredEvents;
 
-    //calling gemma
-    final gemma = context.read<GemmaService>();
-    final result = await gemma.askQuestion(text, events);
+    //calling gemini
+    final gemini = context.read<GeminiService>();
+    final result = await gemini.askQuestion(text, events);
 
     //calling fly to parser
-    final flytoResult = gemma.parseFlyTo(result);
-    final historicalEvent = gemma.parseHistoricalEvent(result);
+    final flytoResult = gemini.parseFlyTo(result);
+    final historicalEvent = gemini.parseHistoricalEvent(result);
 
     final cleanResult = result
         .split('\n')
