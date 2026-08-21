@@ -31,6 +31,7 @@ class _MapScreenState extends State<MapScreen> {
   final MapController _mapController = MapController();
 
   bool _showInfoCard = false;
+  bool _isMuted = false;
 
   @override
   Widget build(BuildContext context) {
@@ -103,8 +104,89 @@ class _MapScreenState extends State<MapScreen> {
 
                             Positioned(
                               right: 14,
-                              bottom: 100,
+                              bottom: 96,
                               child: _buildRightControls(),
+                            ),
+
+                            
+                            // ── Mute/Unmute button — top right ──────────
+                            Positioned(
+                              top: 12,
+                              right: 14,
+                              child: Builder(
+                                builder: (context) {
+                                  final tts = context.watch<TTSService>();
+                                  final isMuted = tts.isMuted;
+
+                                  return GestureDetector(
+                                    onTap: () {
+                                      tts.setMuted(!isMuted);
+                                      setState(() => _isMuted = isMuted);
+                                    },
+                                    child: AnimatedContainer(
+                                      duration: const Duration(
+                                        milliseconds: 200,
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 20,
+                                        vertical: 10,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: AppTheme.background.withValues(
+                                          alpha: 0.92,
+                                        ),
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(
+                                          color: isMuted
+                                              ? AppTheme.severityCritical
+                                                    .withValues(alpha: 0.6)
+                                              : Colors.white.withValues(
+                                                  alpha: 0.6,
+                                                ),
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withValues(
+                                              alpha: 0.3,
+                                            ),
+                                            blurRadius: 2,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            isMuted
+                                                ? Icons.volume_off_rounded
+                                                : Icons.volume_up_rounded,
+                                            size: 18,
+                                            color: isMuted
+                                                ? AppTheme.severityCritical
+                                                : Colors.white.withValues(
+                                                    alpha: 0.8,
+                                                  ),
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            isMuted ? 'Unmute' : 'Mute',
+                                            style: TextStyle(
+                                              color: isMuted
+                                                  ? AppTheme.severityCritical
+                                                  : Colors.white.withValues(
+                                                      alpha: 0.8,
+                                                    ),
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
                             ),
 
                             if (_showInfoCard)
@@ -270,23 +352,6 @@ class _MapScreenState extends State<MapScreen> {
             _mapController.move(const LatLng(20, 0), 2.5);
           },
         ),
-        const SizedBox(height: 14),
-        // Stop TTS ← add this
-        _buildMapControlButton(
-          icon: Icons.volume_off_rounded,
-          iconColor: AppTheme.severityCritical, // red to make it obvious
-          onTap: () {
-            final tts = context.read<TTSService>();
-            tts.stop();
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Voice stopped'),
-                duration: Duration(seconds: 1),
-                backgroundColor: Colors.red,
-              ),
-            );
-          },
-        ),
       ],
     );
   }
@@ -313,7 +378,11 @@ class _MapScreenState extends State<MapScreen> {
             ),
           ],
         ),
-        child: Icon(icon, size: 20, color: iconColor ?? Colors.white.withValues(alpha: 0.8)),
+        child: Icon(
+          icon,
+          size: 20,
+          color: iconColor ?? Colors.white.withValues(alpha: 0.8),
+        ),
       ),
     );
   }
@@ -721,7 +790,7 @@ class _MapScreenState extends State<MapScreen> {
     final box = Hive.box(AppConstants.settingsBox);
     final ttsEnabled = box.get(AppConstants.keyTTSEnabled, defaultValue: true);
 
-    if (ttsEnabled) {
+    if (ttsEnabled && !_isMuted) {
       tts.speakRegionSummary(visibleEvents);
     }
 

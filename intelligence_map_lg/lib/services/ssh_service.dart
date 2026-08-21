@@ -77,6 +77,7 @@ class SSHService extends ChangeNotifier {
 
   /// Executes a shell command on the LG master.
   /// Uses _client!.execute() matching the production app pattern.
+  // Add this at the top of SSHService class
   Future<String?> execute(String command) async {
     if (_client == null) return null;
 
@@ -84,7 +85,33 @@ class SSHService extends ChangeNotifier {
       final result = await _client!.run(command);
       return utf8.decode(result);
     } catch (e) {
-      return null;
+      // Try to reconnect once
+      final reconnected = await _reconnect();
+      if (!reconnected) return null;
+      // Retry the command after reconnect
+      try {
+        final result = await _client!.run(command);
+        return utf8.decode(result);
+      } catch (e2) {
+        return null;
+      }
+    }
+  }
+
+  Future<bool> _reconnect() async {
+    if (_host == null) return false;
+    try {
+      disconnect();
+      await Future.delayed(const Duration(seconds: 1));
+      return await connect(
+        host: _host!,
+        port: _port!,
+        username: _username!,
+        password: _password!,
+        numberOfRigs: _numberOfRigs,
+      );
+    } catch (e) {
+      return false;
     }
   }
 
@@ -226,7 +253,7 @@ class SSHService extends ChangeNotifier {
   }
 
   int _getLeftSlaveScreen() {
-    return (_numberOfRigs / 2).floor() + 2; 
+    return (_numberOfRigs / 2).floor() + 2;
   }
 
   /// Sends the Global Pulse logo to the leftmost slave screen.
@@ -286,6 +313,8 @@ class SSHService extends ChangeNotifier {
     double tilt = 0,
     double range = 1500000,
   }) async {
+    if (_client == null) return false;
+
     final lookAt =
         'flytoview=<LookAt><longitude>$longitude</longitude>'
         '<latitude>$latitude</latitude><altitude>$altitude</altitude>'
@@ -293,7 +322,11 @@ class SSHService extends ChangeNotifier {
         '<range>$range</range>'
         '<altitudeMode>relativeToGround</altitudeMode></LookAt>';
 
-    return await execute("echo '$lookAt' > /tmp/query.txt") != null;
+    // Clear first then write — prevents stale content
+    await execute('echo "" > /tmp/query.txt');
+    await Future.delayed(const Duration(milliseconds: 500));
+    final result = await execute("echo '$lookAt' > /tmp/query.txt");
+    return result != null;
   }
 
   /// Reboots the entire LG rig.

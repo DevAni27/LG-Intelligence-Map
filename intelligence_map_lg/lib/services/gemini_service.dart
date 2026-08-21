@@ -14,8 +14,6 @@ class GeminiService {
   String? _getApiKey() {
     final box = Hive.box(AppConstants.settingsBox);
     final key = box.get(AppConstants.keyGoogleAIStudioApiKey, defaultValue: '');
-    debugPrint('=== API KEY LENGTH: ${key?.length}');
-    debugPrint('=== API KEY FIRST 10: ${key?.substring(0, 10)}');
     if (key == null || key.isEmpty) return null;
     return key.trim();
   }
@@ -51,7 +49,7 @@ class GeminiService {
               ],
             },
           ],
-          'generationConfig': {'maxOutputTokens': 1024, 'temperature': 0.7},
+          'generationConfig': {'temperature': 0.8},
         }),
       );
 
@@ -74,8 +72,6 @@ class GeminiService {
 
         return parts[0]['text'] ?? 'No response received. Please try again.';
       } else {
-        debugPrint('=== ERROR STATUS: ${response.statusCode}');
-        debugPrint('=== ERROR BODY: ${response.body}');
         return 'Error ${response.statusCode}: Please try again.';
       }
     } catch (e) {
@@ -256,27 +252,30 @@ Question: $question''';
     final dominant = TopRegionHelper.getDominantCategory(recentEvents);
     final topEvent = TopRegionHelper.getTopEvent(recentEvents);
 
+    // Format as readable string — NOT the raw Dart list object
     final eventList = urgentEvents
         .take(20)
         .map((e) => '${e.title} | ${e.locationName} | ${e.severity.name}')
         .join('\n');
 
-    return '''You are Global Pulse, a real-time world event assistant.
+    return '''You are Global Pulse, a real-time world event assistant delivering a live news briefing.
 
 Last 24 hours overview:
-- Total events: $eventList
+- Total active events: ${recentEvents.length}
 - Most affected event type: $dominant
 - Most critical event: $topEvent
 
 Urgent events:
-$urgentEvents
+$eventList
 
 Rules:
-- Write a 120-150 word spoken briefing like a news anchor
-- Cover the most significant events and high risk regions
-- Flowing natural sentences, no bullet points, no headers
-- Start with: "Here is your Global Pulse briefing."
-- End with: "Stay informed and stay safe."
+- Write a COMPLETE spoken briefing of exactly 150-180 words
+- Cover at least 3-4 different events or regions from the list above
+- Use flowing natural sentences like a professional news anchor
+- No bullet points, no headers, no lists
+- Start with exactly: "Here is your Global Pulse briefing."
+- End with exactly: "Stay informed and stay safe."
+- Write the COMPLETE briefing — do not stop mid-sentence
 - Never mention you are an AI or reading a list''';
   }
 

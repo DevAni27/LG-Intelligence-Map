@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter_tts/flutter_tts.dart';
 import '../data/models/global_event.dart';
 import '../core/utils/top_region_helper.dart';
@@ -8,9 +7,17 @@ import 'gemini_service.dart';
 class TTSService {
   final FlutterTts _tts = FlutterTts();
   final GeminiService _geminiService = GeminiService();
+  bool _isMuted = false;
+
+  bool get isMuted => _isMuted;
 
   TTSService() {
     _init();
+  }
+
+  void setMuted(bool muted) {
+    _isMuted = muted;
+    if (muted) stop();
   }
 
   Future<void> _init() async {
@@ -22,12 +29,14 @@ class TTSService {
 
   //tts for a particular event
   Future<void> speakEventSummary(GlobalEvent event) async {
+    if(_isMuted) return;
     final text = _buildEventSpeech(event);
     await _tts.stop();
     await _tts.speak(text);
   }
 
   Future<void> speakTourEventSummary(GlobalEvent event) async {
+    if(_isMuted) return;
     final text = _buildTourEventSpeech(event);
     await _tts.stop();
     await _tts.speak(text);
@@ -35,6 +44,7 @@ class TTSService {
 
   //tts for a specific region
   Future<void> speakRegionSummary(List<GlobalEvent> visibleEvents) async {
+    if(_isMuted) return;
     final aiSummary = await _geminiService.generateRegionSummary(visibleEvents);
     final text = _buildRegionSpeech(visibleEvents, aiSummary);
     await _tts.stop();
@@ -46,6 +56,7 @@ class TTSService {
   }
 
   Future<void> speakAndWait(String text) async {
+    if(_isMuted) return;
     final completer = Completer();
     _tts.setCompletionHandler(() => completer.complete());
     await _tts.speak(text);

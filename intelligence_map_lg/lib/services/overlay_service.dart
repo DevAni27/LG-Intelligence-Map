@@ -34,9 +34,7 @@ class OverlayService {
           <div style="font-family: Arial, sans-serif; width: 900px; background-color: #0f172a; color: #ffffff; border-radius: 12px; overflow: hidden;">
             
             <!-- Header Image -->
-            <div style="width: 100%; height: 200px; overflow: hidden;">
-              <img src="$imageUrl" style="width: 100%; height: 200px; object-fit: cover;" />
-            </div>
+            <div style="width: 100%; height: 200px; background-image: url('$imageUrl'); background-size: cover; background-position: center; background-repeat: no-repeat;"></div>
 
             <!-- Category + Severity Row -->
             <div style="padding: 16px 20px 8px 20px; display: flex; gap: 10px;">
@@ -194,10 +192,7 @@ class OverlayService {
           <div style="font-family: Arial, sans-serif; width: 900px; background-color: #0f172a; color: #ffffff; border-radius: 12px; overflow: hidden;">
 
             <!-- Header Image -->
-            <div style="width: 100%; height: 160px; overflow: hidden; position: relative;">
-              <img src="$imageURL" style="width: 100%; height: 160px; object-fit: cover;" />
-              <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, #0f172a); height: 60px;"></div>
-            </div>
+            <div style="width: 100%; height: 200px; background-image: url('$imageURL'); background-size: cover; background-position: center; background-repeat: no-repeat;"></div>
 
             <!-- Title -->
             <div style="padding: 14px 20px 4px 20px;">
@@ -561,7 +556,7 @@ class OverlayService {
                 ✦ AI Briefing In Progress...
               </p>
               <p style="color: #475569; font-size: 16px; margin: 4px 0 0 0;">
-                Powered by Google Gemini 4 via Global Pulse
+                Powered by Google Gemini 3.6 Flash via Global Pulse
               </p>
             </div>
 
