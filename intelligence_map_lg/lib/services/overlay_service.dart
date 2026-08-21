@@ -1,6 +1,6 @@
 import '../data/models/global_event.dart';
 import '../core/utils/top_region_helper.dart';
-import 'gemma_service.dart';
+import 'gemini_service.dart';
 
 class OverlayService {
   static String generateEventOverlayKml(GlobalEvent event) {
@@ -34,9 +34,7 @@ class OverlayService {
           <div style="font-family: Arial, sans-serif; width: 900px; background-color: #0f172a; color: #ffffff; border-radius: 12px; overflow: hidden;">
             
             <!-- Header Image -->
-            <div style="width: 100%; height: 200px; overflow: hidden;">
-              <img src="$imageUrl" style="width: 100%; height: 200px; object-fit: cover;" />
-            </div>
+            <div style="width: 100%; height: 200px; background-image: url('$imageUrl'); background-size: cover; background-position: center; background-repeat: no-repeat;"></div>
 
             <!-- Category + Severity Row -->
             <div style="padding: 16px 20px 8px 20px; display: flex; gap: 10px;">
@@ -106,7 +104,7 @@ class OverlayService {
 
   static Future<String> generateRegionOverlayKML(
     List<GlobalEvent> visibleEvents,
-    GemmaService gemmmaService,
+    GeminiService gemmmaService,
   ) async {
     final dominant = TopRegionHelper.getDominantCategory(visibleEvents);
     final imageURL = dominant != null
@@ -117,12 +115,12 @@ class OverlayService {
     final severityCount = TopRegionHelper.getSeverityCounts(visibleEvents);
     final topEvent = TopRegionHelper.getTopEvent(visibleEvents);
 
-    String gemmaSummary;
+    String geminiSummary;
 
     try {
-      gemmaSummary = await gemmmaService.generateRegionSummary(visibleEvents);
+      geminiSummary = await gemmmaService.generateRegionSummary(visibleEvents);
     } catch (e) {
-      gemmaSummary =
+      geminiSummary =
           'AI summary temporarily unavailable. ${visibleEvents.length} active events detected in this region.';
     }
 
@@ -194,10 +192,7 @@ class OverlayService {
           <div style="font-family: Arial, sans-serif; width: 900px; background-color: #0f172a; color: #ffffff; border-radius: 12px; overflow: hidden;">
 
             <!-- Header Image -->
-            <div style="width: 100%; height: 160px; overflow: hidden; position: relative;">
-              <img src="$imageURL" style="width: 100%; height: 160px; object-fit: cover;" />
-              <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, #0f172a); height: 60px;"></div>
-            </div>
+            <div style="width: 100%; height: 200px; background-image: url('$imageURL'); background-size: cover; background-position: center; background-repeat: no-repeat;"></div>
 
             <!-- Title -->
             <div style="padding: 14px 20px 4px 20px;">
@@ -241,7 +236,7 @@ class OverlayService {
               <p style="color: #c5c6c7; font-size: 16px; margin: 0 0 8px 0; letter-spacing: 1px;">AI REGIONAL SUMMARY</p>
               <div style="background-color: #1e293b; border-radius: 8px; padding: 12px 14px; border-left: 3px solid #06b6d4;">
                 <p style="color: #a9aaab; font-size: 20px; font-style: italic; margin: 0;">
-                  $gemmaSummary
+                  $geminiSummary
                 </p>
               </div>
             </div>
@@ -561,7 +556,7 @@ class OverlayService {
                 ✦ AI Briefing In Progress...
               </p>
               <p style="color: #475569; font-size: 16px; margin: 4px 0 0 0;">
-                Powered by Google Gemma 4 via Global Pulse
+                Powered by Google Gemini 3.6 Flash via Global Pulse
               </p>
             </div>
 

@@ -10,7 +10,7 @@ import 'services/ssh_service.dart';
 import 'services/kml_service.dart';
 import 'services/tts_service.dart';
 import 'package:provider/provider.dart';
-import 'services/gemma_service.dart';
+import 'services/gemini_service.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 
 void main() async {
@@ -51,8 +51,8 @@ void main() async {
         Provider<TTSService>(
           create: (_) => ttsService,
         ),
-        Provider<GemmaService>(
-          create: (_) => GemmaService(),
+        Provider<GeminiService>(
+          create: (_) => GeminiService(),
         ),
       ],
       child: MultiRepositoryProvider(

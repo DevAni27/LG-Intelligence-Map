@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../logic/blocs/events/events_bloc.dart';
-import '../../services/gemma_service.dart';
+import '../../services/gemini_service.dart';
 import '../../services/tts_service.dart';
 import 'dart:async';
 import '../../core/utils/top_region_helper.dart';
@@ -33,10 +33,10 @@ class _DailyPulseCardState extends State<DailyPulseCard> {
     final state = context.read<EventsBloc>().state;
     final ssh = context.read<SSHService>();
     final tts = context.read<TTSService>();
-    final gemma = context.read<GemmaService>();
+    final gemini = context.read<GeminiService>();
 
     // Generate AI briefing
-    final briefing = await gemma.generateDailyPulse(state.allEvents);
+    final briefing = await gemini.generateDailyPulse(state.allEvents);
 
     setState(() {
       _isLoading = false;

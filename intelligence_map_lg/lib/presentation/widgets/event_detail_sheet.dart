@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../data/models/global_event.dart';
-import '../../services/gemma_service.dart';
+import '../../services/gemini_service.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../widgets/severity_badge.dart';
@@ -29,8 +29,8 @@ class _EventDetailSheetState extends State<EventDetailSheet> {
       ),
     );
     setState(() => _isLoadingInsight = true);
-    final gemma = context.read<GemmaService>();
-    final result = await gemma.eventExplain(widget.event);
+    final gemini = context.read<GeminiService>();
+    final result = await gemini.eventExplain(widget.event);
     setState(() {
       _insight = result;
       _isLoadingInsight = false;
