@@ -79,8 +79,8 @@ Built and submitted as a GESOC 2026 project under the Liquid Galaxy organization
 |:-----------:|:----------:|:------:|
 | ![Home](docs/screenshots/home.png.png) | ![Map](docs/screenshots/map.png.png) | ![AI](docs/screenshots/ask_ai.png.png) |
 
-| Historical Timeline | Settings | LG Rig |
-|:------------------:|:--------:|:------:|
+| Historical Timeline | Settings | 
+|:------------------:|:--------:|
 | ![Timeline](docs/screenshots/timeline.png.png) | ![Settings](docs/screenshots/settiings.png.png) | 
 
 ---
