@@ -9,7 +9,7 @@
 [![GESOC](https://img.shields.io/badge/GESOC-2026-orange?style=flat)](https://summerofcode.withgoogle.com)
 [![Liquid Galaxy](https://img.shields.io/badge/Liquid%20Galaxy-App%20Store-blue?style=flat)](https://www.liquidgalaxy.eu)
 
-**GESOC 2026 · Liquid Galaxy Lab (Google-backed)**
+**GESOC 2026 · Liquid Galaxy Lab**
 
 *A real-time global event intelligence platform that transforms the Liquid Galaxy multi-screen rig into a live world monitoring dashboard — powered by NASA, USGS, WHO data and Google Gemini AI.*
 
