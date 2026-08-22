@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/images/global_pulse_logo.png" alt="Global Pulse Logo" width="120"/>
+<img src="intelligence_map_lg/assets/images/lg_logo.png" alt="Global Pulse Logo" width="120"/>
 
 # Global Pulse
 ### AI-Powered World Intelligence Map for Liquid Galaxy
